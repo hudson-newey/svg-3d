@@ -195,7 +195,7 @@ establishes the viewport (`svg`):
 Design points for the spec (OQ-5):
 
 - The **active camera** of a viewport is its first `camera` child element. A
-  `camera` presentation property on `svg` (`camera="url(#cam)"`) is the reuse
+  `camera` attribute on `svg` (`camera="url(#cam)"`) is the reuse
   hook for cameras defined in `defs` and shared across viewports.
 - Attribute set (baseline): `projection` (`orthographic | perspective`),
   `position`, `target`, `up`, `fov`, `near`, `far`, plus orthographic extents.
@@ -253,16 +253,16 @@ each mechanism, and the author-facing fallback idioms:
    <svg xmlns="http://www.w3.org/2000/svg">
      <switch>
        <!-- 3D-capable renderer -->
-       <path3d d="…" requiredExtensions="http://svg.example/svg3d/1.0"/>
+       <path3d d="…" requiredExtensions="urn:svg3d:1.0"/>
        <!-- 2D fallback -->
        <path d="…"/>
      </switch>
    </svg>
    ```
 
-   The spec must register the extension URI, define `requiredExtensions`
-   evaluation for SVG-3D support, and state that `switch` child selection is
-   unaffected by unknown-element handling (G2).
+   The spec freezes the extension identifier as `urn:svg3d:1.0`, defines
+   `requiredExtensions` evaluation for SVG-3D support, and states that
+   `switch` child selection is unaffected by unknown-element handling (G2).
 3. **Camera**: a `camera` element is unknown to a 2D renderer (G2) and is
    skipped; the viewport then uses the default orthographic camera (§4.2.3),
    which reproduces SVG 2's flat rendering exactly. No author action required.
@@ -294,7 +294,7 @@ modules.
 |---|---------|---------|-----------|
 | 1 | Introduction | Goals, scope, non-goals (§1 above) | §1 |
 | 2 | Conformance | SVG 2 dependency, 2D-conformance profile = SVG 2 + nothing; 3D-conformance profile | §2, §5 |
-| 3 | Rendering model | 2D paint model unchanged; add projection stage; `camera` element, `camera` property, and default camera (orthographic, SVG 2-identical); painter's-algorithm z-ordering definition | §4.2.3, OQ-5 |
+| 3 | Rendering model | 2D paint model unchanged; add projection stage; `camera` element, `camera` attribute on `svg`, and default camera (orthographic, SVG 2-identical); painter's-algorithm z-ordering definition | §4.2.3, OQ-5 |
 | 4 | Coordinate systems | 3D user space; relationship to CSS Transforms 4×4 matrices (G6); transform ordering; explicit rule that transforms never define the camera | §4.3 |
 | 5 | Basic shapes | All Category A attribute tables (§4.1), each with: syntax, geometry-property status, 2D degradation, examples | §4.1 |
 | 6 | `path3d` | New element + grammar (OQ-1 decision), error handling, fallback idiom | §4.2.1, §5 |
@@ -327,24 +327,23 @@ modules.
   named `zs` on `polyline`/`polygon` (i-th entry = z of i-th parsed vertex;
   missing → `0`, extra ignored). New `polygon3d`/`polyline3d` elements not
   defined.
-- **OQ-4**: does `rect` gain a `depth` attribute (extruded box) or does a box
-  become a new element? Default: planar rect only; volume is future work.
-  (Open as spec Appendix C, C-3.)
+- **OQ-4** — **RESOLVED** (spec §6.2, D-9): `rect` stays planar in v1;
+  volumetric boxes are out of scope (author with two `rect`s or `path3d`).
 - **OQ-5** — **LARGELY RESOLVED** (spec §5, decision D-3): `<camera>` element
   with `projection/position/target/up/fov/near/far`; `viewBox` is the film
   plane (orthographic extents implied by viewBox scale); active camera =
   `camera` attribute on `svg` (URL) → first `camera` child → default
-  orthographic identity camera. Remaining detail: whether `camera` on `svg`
-  becomes a presentation property (spec C-7).
+  orthographic identity camera. **RESOLVED addendum** (spec §5.2, D-9): `camera`
+  on `svg` is a plain XML attribute — explicitly not a presentation property;
+  no CSS integration.
 - **OQ-6** — **RESOLVED** (spec §3.1, decision D-4): markers (and text-on-path,
   stroking, gradient positioning) act on the *projected* outline
-  ("project-early"); true 3D orientation is future work (spec C-8).
+  ("project-early"); no 3D marker orientation exists in this specification.
 - **OQ-7** — **RESOLVED** (spec §3.2): shapes are 3D geometry; projected
   outlines are exact conics (ellipse-flattening within one device pixel
   permitted), so oblique planes fall out of the general pipeline.
-- **OQ-8**: versioning signal: is a namespace bump (SVG 3) needed, or is the
-  attribute/element extension sufficient? Default: no namespace bump; SVG 2
-  extension mechanism only.
+- **OQ-8** — **RESOLVED** (spec §2.3, decision D-6): no namespace bump; the
+  extension uses SVG 2's unknown-attribute/unknown-element channels only.
 
 ### 7.3 Validation & testing plan
 

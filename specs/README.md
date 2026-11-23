@@ -29,4 +29,6 @@ Specification drafts for the SVG 3D extension.
 
 ## Status
 
-Draft. Open issues are tracked in Appendix C of the spec document.
+Draft. All planning-phase open issues are resolved and frozen in the spec
+(Appendix B, decision D-9). No CSS integration: `camera` on `svg` is a plain
+XML attribute, and the fallback extension identifier is `urn:svg3d:1.0`.

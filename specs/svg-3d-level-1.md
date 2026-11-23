@@ -28,9 +28,9 @@ does not explicitly modify remain in force.
 
 ## Status of this document
 
-Work in progress; the vocabulary and the compatibility model are stable, the
-open issues in Appendix C are not. Comments are tracked in the repository issue
-tracker. This specification is an independent community draft and has no
+Work in progress. The vocabulary, the compatibility model, and all planning-phase
+issues (resolved — Appendix B, D-9) are stable. Comments are tracked in the
+repository issue tracker. This specification is an independent community draft and has no
 standing in the W3C process.
 
 ---
@@ -52,7 +52,6 @@ standing in the W3C process.
 13. [Security, privacy, and accessibility](#13-security-privacy-and-accessibility)
 - [Appendix A: Attribute and element summary](#appendix-a-attribute-and-element-summary)
 - [Appendix B: Changes since SVG 2, and decision log](#appendix-b-changes-since-svg-2-and-decision-log)
-- [Appendix C: Open issues](#appendix-c-open-issues)
 
 ---
 
@@ -192,10 +191,15 @@ positioning, clipping, masking, hit testing geometry — operates on the
 geometry had been authored directly. Consequences, all normative:
 
 - Markers with `orient="auto"` orient to the tangent of the *projected*
-  outline. No 3D marker orientation is defined in this version.
+  outline; this specification defines no 3D marker orientation.
 - `textPath` follows the *projected* outline of the referenced path.
 - `stroke-width` is applied in projected space: strokes have constant width on
-  screen and are not foreshortened. (Known limitation; Appendix C, C-1.)
+  screen and are not foreshortened. This is the rule of this specification,
+  not a limitation: stroke width is a screen-space property.
+- `animateMotion` moves along the *projected* outline when its `mpath`
+  references 3D geometry (a `path3d`, or any shape with `z` geometry). The
+  `animateMotion` `path` attribute itself remains the SVG 2 2D grammar (R3)
+  and is never extended.
 - Gradient positioning follows §9.
 
 A 2D renderer performs none of steps 2–3; it renders geometry as authored,
@@ -312,6 +316,10 @@ in this order of precedence:
 
 An unresolvable or invalid URL reference is an error at the `camera`
 attribute; the resolution falls through to rule 2, then 3 (see §12).
+
+The `camera` attribute is a plain XML attribute. It is **not** a presentation
+property: it cannot be set or cascaded through style sheets, and no `camera`
+CSS property is defined by this specification.
 
 ### 5.3 Viewport relationship
 
@@ -441,7 +449,7 @@ The projected geometry is the projection of the 3D segment.
 
 The rect's geometry is the rectangle `(x, y)` to `(x + width, y + height)` in
 the plane `z = z`, including rounded corners (`rx`/`ry`). Volumetric boxes are
-not defined in this version (Appendix C, C-3).
+out of scope; authors model a box with two `rect` elements or with `path3d`.
 
 ### 6.3 `circle` and `ellipse`
 
@@ -483,8 +491,8 @@ The `z` and `dz` lists follow, respectively, the exact alignment, repetition,
 and delta-chaining rules that SVG 2 defines for the `x`/`y` and `dx`/`dy`
 lists; each character's position is `(x, y, z)` after delta application.
 Characters are laid out in 3D along the line, then projected per §3.1; glyphs
-are rendered as the SVG 2 glyphs at their projected positions (no glyph
-rotation toward the camera in this version; Appendix C, C-4).
+are rendered as the SVG 2 glyphs at their projected positions. Glyphs never
+rotate toward the camera in this specification.
 
 ```xml
 <text x="10 30 50" y="20 20 20" z="0 10 20">3D</text>
@@ -506,9 +514,8 @@ rotation toward the camera in this version; Appendix C, C-4).
 The `path3d` element renders the outline defined by its path data, interpreted
 in 3D and projected per §3.1. Its path data grammar is defined in §7.2.
 
-`pathLength`: **not supported** on `path3d` in this version. A `pathLength`
-attribute on `path3d` is ignored (R1 analog: unsupported attribute). See
-Appendix C, C-2.
+`pathLength`: not defined for `path3d`. A `pathLength` attribute on `path3d`
+**MUST** be ignored.
 
 ### 7.2 Path data grammar
 
@@ -678,8 +685,8 @@ by the general conic rule of §3.2).
 The `pattern` tile is 2D content, positioned by `x`/`y`/`width`/`height` in
 the plane `z = 0` of the pattern's coordinate system; `patternTransform`
 accepts 3D transform functions, and the tile geometry participates in the
-projection pipeline. (A `z` placement attribute for `pattern` is future work;
-Appendix C, C-5.)
+projection pipeline. The tile has no depth attribute of its own:
+`patternTransform` is the only way to move a tile in `z`.
 
 ---
 
@@ -720,7 +727,7 @@ fallback **MUST** use the conditional-processing idiom:
 <switch>
   <!-- 3D renderer: exact 3D geometry -->
   <path3d d="M 10,10,0 L 80,60,40"
-          requiredExtensions="http://svg.example/svg3d/1.0"/>
+          requiredExtensions="urn:svg3d:1.0"/>
   <!-- 2D fallback: flat projection of the same segment -->
   <path d="M 10,10 L 80,60"/>
 </switch>
@@ -728,11 +735,10 @@ fallback **MUST** use the conditional-processing idiom:
 
 Rules:
 
-- The SVG 3D extension identifier is
-  `http://svg.example/svg3d/1.0` (placeholder pending registration;
-  Appendix C, C-6). A 3D-conformant renderer **MUST** evaluate
-  `requiredExtensions` as *true* for this identifier; a 2D renderer evaluates
-  it as *false* per SVG 2 §5.6.4.
+- The SVG 3D extension identifier is **`urn:svg3d:1.0`**. The value is an
+  opaque string compared for equality. A 3D-conformant renderer **MUST**
+  evaluate `requiredExtensions` as *true* for this identifier; a 2D renderer
+  evaluates it as *false* per SVG 2 §5.6.4.
 - A 2D renderer's unknown-element handling (R2) does not affect `switch`
   child selection: the fallback `path` is rendered, the `path3d` is not.
 
@@ -824,32 +830,25 @@ behavior.
    identity, guaranteeing SVG 2-identical rendering.
 4. **D-4 — Project-early principle** (§3.1): projection happens before the
    paint stage; markers, text-on-path, stroking, and gradient positioning act
-   on projected geometry. Constant screen-space stroke width is a documented
-   consequence (C-1).
+   on projected geometry. Constant screen-space stroke width is a rule of
+   this specification (see D-9).
 5. **D-5 — No depth testing** (§3.4): painting order is document order.
 6. **D-6 — No new namespace** (§2.3): SVG 2's extension channels
    (§5.10) suffice.
 7. **D-7 — No DOM/IDL in this version** (§1.4).
 8. Everything else: new geometry attributes per §6, §9, §10 and Appendix A.
+9. **D-9 — All planning open issues resolved (v1 freeze).** The remaining
+   decisions were fixed as follows, each chosen for simplicity and strict
+   SVG 2 compatibility:
 
-## Appendix C: Open issues
-
-- **C-1** Strokes are screen-space constant width (§3.1). A 3D-space stroke
-  model (foreshortened width) is future work.
-- **C-2** `pathLength` on `path3d`: excluded in v1 because the distance is
-  ambiguous between 3D user-space length and projected length. Revisit with a
-  normative choice if authoring feedback requires it.
-- **C-3** Volumetric `rect` (`depth` attribute or a box element): deferred;
-  plan OQ-4 default (planar only) is in force.
-- **C-4** Glyph orientation toward the camera for 3D text: deferred; glyphs
-  are billboard-free in v1.
-- **C-5** `pattern` plane placement attribute: deferred.
-- **C-6** The extension identifier `http://svg.example/svg3d/1.0` (§11.2) is a
-  placeholder; it must be registered before publication.
-- **C-7** `camera` on `svg` is an attribute in this version; whether it should
-  be a CSS presentation property is open.
-- **C-8** Marker 3D orientation (`orient` tangent frames in 3D): resolved for
-  v1 via the project-early principle; true 3D marker orientation is future
-  work.
-- **C-9** `textPath`/`animateMotion` over 3D paths beyond the projected
-  outline: future work.
+   | Issue | Resolution |
+   |-------|------------|
+   | Stroke width in 3D | Screen-space constant width, as a rule of this specification (§3.1) |
+   | `pathLength` on `path3d` | Ignored; not defined for `path3d` (§7.1) |
+   | Volumetric `rect` | Out of scope; planar only — use two `rect`s or `path3d` (§6.2) |
+   | Glyph orientation | Glyphs never rotate toward the camera (§6.6) |
+   | `pattern` depth | No depth attribute; `patternTransform` is the only `z` placement (§9.4) |
+   | Extension identifier | Frozen as `urn:svg3d:1.0` (§11.2) |
+   | `camera` on `svg` | Plain XML attribute; explicitly not a presentation property; no CSS integration (§5.2) |
+   | Marker/text-on-path in 3D | Operate on projected outlines, definitively (§3.1) |
+   | `animateMotion` | Moves along projected outlines via `mpath`; its `path` attribute stays 2D (R3) (§3.1) |
