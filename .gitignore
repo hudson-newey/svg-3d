@@ -16,3 +16,4 @@ storybook-static/
 
 # Test/build scratch
 .tmp/
+.tmp-*/

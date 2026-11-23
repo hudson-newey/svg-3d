@@ -6,6 +6,9 @@
     "dist"
   ],
   "type": "module",
+  "main": "dist/svg-3d-viewer.js",
+  "module": "dist/svg-3d-viewer.js",
+  "jsdelivr": "dist/svg-3d-viewer.js",
   "exports": {
     ".": "./dist/svg-3d-viewer.js"
   },

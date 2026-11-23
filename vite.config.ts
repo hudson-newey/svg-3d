@@ -3,15 +3,15 @@ import { defineConfig } from "vite";
 export default defineConfig({
   build: {
     // Library mode: the component (and its public helpers) as a single
-    // ES module. `lit` stays external — it is a runtime dependency.
+    // self-contained ES module (lit inlined — see rollupOptions note).
     lib: {
       entry: "src/index.ts",
       formats: ["es"],
       fileName: "svg-3d-viewer",
     },
-    rollupOptions: {
-      external: (id: string) => id === "lit" || id.startsWith("lit/"),
-    },
+    // lit is inlined: the dist bundle is fully self-contained, so it can be
+    // loaded from a CDN with a single <script type="module"> tag — no import
+    // map, and no dual-instance hazard from shared lit subpath builds.
     outDir: "dist",
     emptyOutDir: true,
     sourcemap: true,
