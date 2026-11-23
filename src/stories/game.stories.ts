@@ -789,7 +789,7 @@ function stepGame(
 const cabinetStyle =
   "position:relative;display:flex;flex-direction:column;gap:10px;width:100%;height:100vh;box-sizing:border-box;overflow:hidden;padding:14px;border-radius:14px;background:#070a14;color:#e2e8f0;font:13px/1.4 system-ui,-apple-system,sans-serif;border:1px solid rgba(56,189,248,0.28);box-shadow:0 18px 42px rgba(2,6,23,0.65);user-select:none";
 const hudStyle =
-  "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:8px;background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.2);font-family:ui-monospace,SFMono-Regular,monospace";
+  "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:8px;background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.2);font-family:ui-monospace,SFMono-Regular,monospace";
 const hudBtn =
   "padding:4px 10px;border-radius:6px;border:1px solid rgba(148,163,184,0.35);background:#1e293b;color:#f8fafc;font:11px/1.3 ui-monospace,monospace;cursor:pointer";
 const overlayStyle =
@@ -804,6 +804,24 @@ export const NeonVectors3D: Story = {
       .neon-cabinet {
         width: 100%;
         height: 100vh;
+        height: 100dvh;
+      }
+      .neon-playfield svg3d-viewer {
+        touch-action: none;
+      }
+      .touch-only {
+        display: none;
+      }
+      @media (pointer: coarse) {
+        .touch-only {
+          display: flex;
+        }
+      }
+      @media (max-width: 640px) {
+        .neon-cabinet {
+          padding: 8px !important;
+          gap: 6px !important;
+        }
       }
       .neon-cabinet:fullscreen {
         width: 100vw;
@@ -857,12 +875,21 @@ export const NeonVectors3D: Story = {
       </div>
 
       <div
+        class="neon-playfield"
         style="position:relative;flex:1;min-height:0;width:100%;border-radius:10px;overflow:hidden;border:1px solid rgba(56,189,248,0.22)"
       >
         <svg3d-viewer
           .markup=${buildGameSvg(createInitialState())}
           style="width:100%;height:100%;cursor:crosshair"
         ></svg3d-viewer>
+
+        <button
+          class="touch-only"
+          data-action="fire"
+          style="position:absolute;right:16px;bottom:16px;width:88px;height:88px;border-radius:999px;border:2px solid #f43f5e;background:rgba(244,63,94,0.28);color:#fecdd3;font:800 15px/1 system-ui,sans-serif;letter-spacing:0.08em;align-items:center;justify-content:center;touch-action:none"
+        >
+          FIRE
+        </button>
 
         <div data-overlay="panel" style=${overlayStyle}>
           <div
@@ -883,7 +910,7 @@ export const NeonVectors3D: Story = {
           <button data-action="start" style=${ctaBtn}>LAUNCH MISSION</button>
           <div style="font-size:11px;color:#94a3b8;margin-top:4px">
             <b>WASD / Arrows</b> or <b>Mouse</b> steer · <b>Space / Click</b> fire · <b>C</b> camera
-            · <b>P</b> pause · <b>F</b> fullscreen
+            · <b>P</b> pause · <b>F</b> fullscreen · <b>Touch: drag to steer, hold FIRE</b>
           </div>
         </div>
       </div>
@@ -916,12 +943,43 @@ export const NeonVectors3D: Story = {
     const soundBtn = root.querySelector<HTMLButtonElement>('[data-action="sound"]')!;
     const pauseBtn = root.querySelector<HTMLButtonElement>('[data-action="pause"]')!;
     const fsBtn = root.querySelector<HTMLButtonElement>('[data-action="fs"]')!;
+    const fireBtn = root.querySelector<HTMLButtonElement>('[data-action="fire"]')!;
 
     const synth = new RetroSynth();
     let state = createInitialState();
     const keys = new Set<string>();
     let pointerTarget: { x: number; y: number } | null = null;
     let pointerDown = false;
+
+    // Pointer lock: on fine-pointer devices the cursor is captured while
+    // playing; steering uses movementX/Y deltas. Touch devices keep drag
+    // steering (pointer events cover both).
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    let locked = false;
+    let lockedAim: { x: number; y: number } | null = null;
+
+    const lockPointer = () => {
+      if (!finePointer || locked || state.phase !== "playing") return;
+      try {
+        const res = (
+          viewer as HTMLElement & { requestPointerLock?: () => Promise<void> | void }
+        ).requestPointerLock?.();
+        if (res && typeof (res as Promise<void>).catch === "function") {
+          (res as Promise<void>).catch(() => {});
+        }
+      } catch {
+        // pointer lock unavailable on this platform
+      }
+    };
+    const unlockPointer = () => {
+      if (document.pointerLockElement) document.exitPointerLock();
+    };
+    const onLockChange = () => {
+      locked = document.pointerLockElement === viewer;
+      if (locked) lockedAim = { x: state.shipX, y: state.shipY };
+      else lockedAim = null;
+    };
+    document.addEventListener("pointerlockchange", onLockChange);
 
     const cycleCam = () => {
       const order: CamMode[] = ["chase", "cockpit", "cinematic"];
@@ -939,11 +997,13 @@ export const NeonVectors3D: Story = {
       overlay.style.display = "none";
       pauseBtn.textContent = "PAUSE";
       root.focus();
+      lockPointer();
     };
 
     const togglePause = () => {
       if (state.phase === "playing") {
         state.phase = "paused";
+        unlockPointer();
         overlay.style.display = "flex";
         overlaySub.textContent = "Mission paused. Press P or click Resume to continue.";
         overlayStats.style.display = "none";
@@ -972,7 +1032,8 @@ export const NeonVectors3D: Story = {
       if (document.fullscreenElement) {
         void document.exitFullscreen();
       } else {
-        void root.requestFullscreen?.().catch(() => {});
+        const res = root.requestFullscreen?.() as Promise<void> | undefined;
+        if (res && typeof res.catch === "function") res.catch(() => {});
       }
     };
     fsBtn.onclick = toggleFullscreen;
@@ -1000,6 +1061,16 @@ export const NeonVectors3D: Story = {
 
     viewer.addEventListener("pointermove", (e: PointerEvent) => {
       if (state.phase !== "playing") return;
+      if (locked) {
+        if (lockedAim) {
+          lockedAim = {
+            x: clamp(lockedAim.x + e.movementX * 0.38, -BOUNDS_X, BOUNDS_X),
+            y: clamp(lockedAim.y + e.movementY * 0.38, BOUNDS_Y_TOP, BOUNDS_Y_BOT),
+          };
+          pointerTarget = lockedAim;
+        }
+        return;
+      }
       const rect = viewer.getBoundingClientRect();
       const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
@@ -1013,7 +1084,25 @@ export const NeonVectors3D: Story = {
       pointerDown = false;
     });
     viewer.addEventListener("pointerdown", () => {
+      if (state.phase !== "playing") return;
+      pointerDown = true;
+      lockPointer();
+    });
+    viewer.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    // On-screen FIRE button (touch devices): hold to fire.
+    fireBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
       if (state.phase === "playing") pointerDown = true;
+    });
+    fireBtn.addEventListener("pointerup", () => {
+      pointerDown = false;
+    });
+    fireBtn.addEventListener("pointercancel", () => {
+      pointerDown = false;
+    });
+    fireBtn.addEventListener("pointerleave", () => {
+      pointerDown = false;
     });
     const onPointerUp = () => {
       pointerDown = false;
@@ -1036,6 +1125,7 @@ export const NeonVectors3D: Story = {
       if (state.phase !== prevPhase) {
         prevPhase = state.phase;
         if (state.phase === "gameover") {
+          unlockPointer();
           overlay.style.display = "flex";
           overlaySub.textContent = "Shields depleted! Ready for another trench run?";
           overlayStats.style.display = "block";
@@ -1050,6 +1140,8 @@ export const NeonVectors3D: Story = {
         window.removeEventListener("keydown", onKeyDown);
         window.removeEventListener("keyup", onKeyUp);
         window.removeEventListener("pointerup", onPointerUp);
+        document.removeEventListener("pointerlockchange", onLockChange);
+        unlockPointer();
         return;
       }
       const dt = Math.min(0.05, (now - last) / 1000);
