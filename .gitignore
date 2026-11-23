@@ -1,0 +1,6 @@
+# Local reference cache of the W3C SVG 2 spec chapters
+.spec-cache/
+
+# Editors / OS
+.DS_Store
+*.swp
