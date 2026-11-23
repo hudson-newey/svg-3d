@@ -3,15 +3,10 @@
 ## Usage
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@hudson-newey/svg-3d-viewer" type="module"></script>
-
-> The URL above has no version: jsDelivr resolves the package's default file > via the
-`jsdelivr`/`main` field in `package.json`, and serves the latest > release. Pin a version
-(`@hudson-newey/svg-3d-viewer@0.1.0`) for > production use, and note the URL only resolves once the
-package is > published to npm. > > The bundle is fully self-contained (`lit` is inlined at build
-time), so no > import map is needed and there is no risk of duplicate `lit` copies from > CDN module
-rewriting. `lit` stays external for source-tree usage > (`pnpm dev` / Storybook resolve it from
-`node_modules`).
+<script
+  src="https://cdn.jsdelivr.net/npm/@hudson-newey/svg-3d-viewer"
+  type="module"
+></script>
 
 <svg3d-viewer style="display:block;width:480px;height:360px">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
