@@ -18,6 +18,8 @@ specification-writing plan, including:
 
 ## Repository layout
 
-- `docs/` — planning and (later) the specification drafts
+- `docs/plan.md` — the specification-writing plan (compatibility rules,
+  inventory, open questions)
+- `specs/svg-3d-level-1.md` — the SVG 3D Level 1 draft specification
 - `.spec-cache/` — local cached copies of the W3C SVG 2 chapters used as
   reference material (not committed)

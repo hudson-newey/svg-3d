@@ -319,22 +319,29 @@ modules.
 
 ### 7.2 Open questions to resolve while drafting
 
-- **OQ-1**: `path3d` grammar — mixed 2D/3D commands (recommended baseline) vs.
-  triples-only vs. z-suffix commands.
-- **OQ-2 / OQ-3**: parallel z-list for `polygon`/`polyline`: attribute name
-  (`zs` vs `points-z` vs `points3d`), and whether to also allow it on `path3d`.
+- **OQ-1** — **RESOLVED** (spec §7.2, decision D-1): `path3d` grammar is
+  triples-only. The recommended mixed 2D/3D baseline proved grammatically
+  ambiguous (`M 1 2 3 4 5 6`) and was rejected; `path3d` is a new element, so
+  no SVG 2 grammar is broken. `H`/`V`/`Z` unchanged.
+- **OQ-2 / OQ-3** — **RESOLVED** (spec §8, decision D-2): parallel attribute
+  named `zs` on `polyline`/`polygon` (i-th entry = z of i-th parsed vertex;
+  missing → `0`, extra ignored). New `polygon3d`/`polyline3d` elements not
+  defined.
 - **OQ-4**: does `rect` gain a `depth` attribute (extruded box) or does a box
   become a new element? Default: planar rect only; volume is future work.
-- **OQ-5**: camera vocabulary details: full `<camera>` attribute set (baseline:
-  `projection`, `position`, `target`, `up`, `fov`, `near`, `far`), orthographic
-  extent model, active-camera selection rule (first `camera` child vs.
-  `camera="url(#id)"` property — default: first child, property as reuse hook),
-  camera scoping with nested `svg` viewports, and whether `fov` semantics
-  reference CSS `perspective`. Default: orthographic baseline reproducing SVG 2
-  exactly; perspective as defined extension.
-- **OQ-6**: 3D marker orientation (`orient="auto"` semantics on 3D tangents).
-- **OQ-7**: `circle`/`ellipse` on an oblique plane (tilted by transform) —
-  confirm ellipse outline math under 4×4 transform + projection.
+  (Open as spec Appendix C, C-3.)
+- **OQ-5** — **LARGELY RESOLVED** (spec §5, decision D-3): `<camera>` element
+  with `projection/position/target/up/fov/near/far`; `viewBox` is the film
+  plane (orthographic extents implied by viewBox scale); active camera =
+  `camera` attribute on `svg` (URL) → first `camera` child → default
+  orthographic identity camera. Remaining detail: whether `camera` on `svg`
+  becomes a presentation property (spec C-7).
+- **OQ-6** — **RESOLVED** (spec §3.1, decision D-4): markers (and text-on-path,
+  stroking, gradient positioning) act on the *projected* outline
+  ("project-early"); true 3D orientation is future work (spec C-8).
+- **OQ-7** — **RESOLVED** (spec §3.2): shapes are 3D geometry; projected
+  outlines are exact conics (ellipse-flattening within one device pixel
+  permitted), so oblique planes fall out of the general pipeline.
 - **OQ-8**: versioning signal: is a namespace bump (SVG 3) needed, or is the
   attribute/element extension sufficient? Default: no namespace bump; SVG 2
   extension mechanism only.
