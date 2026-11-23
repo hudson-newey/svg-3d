@@ -16,7 +16,7 @@ Specification drafts for the SVG 3D extension.
 
 - **`path3d` grammar is triples-only.** The plan's proposed "mixed 2D/3D
   commands" baseline is grammatically ambiguous (`M 1 2 3 4 5 6` could parse
-  as one 3D moveto + implicit lineto *or* three 2D points), so the spec
+  as one 3D moveto + implicit lineto _or_ three 2D points), so the spec
   requires a `z` on every point-carrying command. `H`, `V`, `Z` are unchanged.
 - **`zs`** is the frozen name of the parallel vertex-depth list for
   `polyline`/`polygon`.

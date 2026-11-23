@@ -5,12 +5,12 @@ This document extends [SVG 2](https://www.w3.org/TR/SVG2/) with a third
 coordinate axis. It is written to be normatively self-sufficient where it adds
 vocabulary and to patch SVG 2 by reference everywhere else.
 
-| | |
-|--|--|
-| Version       | 1.0-draft |
-| This version  | `specs/svg-3d-level-1.md` (repository draft) |
-| Depends on    | SVG 2, CSS Transforms Module Level 1, Filter Effects Module Level 1 |
-| Related plan  | [`docs/plan.md`](../docs/plan.md) |
+|              |                                                                     |
+| ------------ | ------------------------------------------------------------------- |
+| Version      | 1.0-draft                                                           |
+| This version | `specs/svg-3d-level-1.md` (repository draft)                        |
+| Depends on   | SVG 2, CSS Transforms Module Level 1, Filter Effects Module Level 1 |
+| Related plan | [`docs/plan.md`](../docs/plan.md)                                   |
 
 ## Abstract
 
@@ -51,6 +51,7 @@ standing in the W3C process.
 12. [Fallback and extensibility](#12-fallback-and-extensibility)
 13. [Error handling](#13-error-handling)
 14. [Security, privacy, and accessibility](#14-security-privacy-and-accessibility)
+
 - [Appendix A: Attribute and element summary](#appendix-a-attribute-and-element-summary)
 - [Appendix B: Changes since SVG 2, and decision log](#appendix-b-changes-since-svg-2-and-decision-log)
 
@@ -121,7 +122,7 @@ where it is applied; they are restated here for convenience.
 
 - **2D renderer**: a user agent conformant to SVG 2 that implements none of
   this specification.
-- **3D renderer**: a user agent conformant to SVG 2 *and* to this
+- **3D renderer**: a user agent conformant to SVG 2 _and_ to this
   specification's 3D conformance class (§2.2).
 - **3D point**: a triple `(x, y, z)` of user units; `z` defaults to `0`
   everywhere in this specification.
@@ -195,13 +196,13 @@ positioning, clipping, masking, hit testing geometry — operates on the
 **projected 2D geometry** and is governed by [SVG2] as if the projected
 geometry had been authored directly. Consequences, all normative:
 
-- Markers with `orient="auto"` orient to the tangent of the *projected*
+- Markers with `orient="auto"` orient to the tangent of the _projected_
   outline; this specification defines no 3D marker orientation.
-- `textPath` follows the *projected* outline of the referenced path.
+- `textPath` follows the _projected_ outline of the referenced path.
 - `stroke-width` is applied in projected space: strokes have constant width on
   screen and are not foreshortened. This is the rule of this specification,
   not a limitation: stroke width is a screen-space property.
-- `animateMotion` moves along the *projected* outline when its `mpath`
+- `animateMotion` moves along the _projected_ outline when its `mpath`
   references 3D geometry (a `path3d`, or any shape with `z` geometry). The
   `animateMotion` `path` attribute itself remains the SVG 2 2D grammar (R3)
   and is never extended. See §10.5.
@@ -291,24 +292,24 @@ viewport: nested viewports may declare their own `camera`.
 
 Attribute definitions:
 
-| Attribute | Value | Initial value | Animatable |
-|-----------|-------|---------------|------------|
-| `projection` | `orthographic \| perspective` | `orthographic` | yes |
-| `position` | `<x> <y> <z>` (3 numbers) | `0 0 0` | yes |
-| `target` | `<x> <y> <z>` (3 numbers) | `0 0 -1` | yes |
-| `up` | `<x> <y> <z>` (3 numbers) | `0 1 0` | yes |
-| `fov` | `<number>` (degrees, vertical field of view) | `45` | yes |
-| `near` | `<number>` (distance in front of the camera) | `0` | yes |
-| `far` | `<number>` (distance in front of the camera) | unbounded (no far clipping) | yes |
+| Attribute    | Value                                        | Initial value                | Animatable |
+| ------------ | -------------------------------------------- | ---------------------------- | ---------- |
+| `projection` | `orthographic \| perspective`                | `orthographic`               | yes        |
+| `position`   | `<x> <y> <z>` (3 numbers)                    | `0 0 0`                      | yes        |
+| `target`     | `<x> <y> <z>` (3 numbers)                    | `0 0 -1`                     | yes        |
+| `up`         | `<x> <y> <z>` (3 numbers)                    | `0 1 0`                      | yes        |
+| `fov`        | `<number>` (degrees, vertical field of view) | `45`                         | yes        |
+| `near`       | `<number>` (distance in front of the camera) | unbounded (no near clipping) | yes        |
+| `far`        | `<number>` (distance in front of the camera) | unbounded (no far clipping)  | yes        |
 
 All attributes above are unknown attributes to a 2D renderer (R1). The
 `camera` element itself is an unknown element to a 2D renderer (R2).
 
 ### 5.2 The `camera` attribute on `svg`
 
-| Attribute | Value | Initial value | Animatable |
-|-----------|-------|---------------|------------|
-| `camera` (on `svg`) | `none \| <url>` | `none` | no |
+| Attribute           | Value           | Initial value | Animatable |
+| ------------------- | --------------- | ------------- | ---------- |
+| `camera` (on `svg`) | `none \| <url>` | `none`        | no         |
 
 The `camera` attribute selects the **active camera** of the viewport,
 in this order of precedence:
@@ -330,9 +331,9 @@ CSS property is defined by this specification.
 
 The film plane is the `viewBox` rectangle: `min-x`, `min-y`, `width`, `height`
 in the `svg`'s own coordinate system. Projection (§5.4) produces coordinates
-in this rectangle; the SVG 2 `viewBox`-to-viewport mapping (including
-`preserveAspectRatio`) then applies unchanged. The `viewBox` **MUST** remain
-2D; this specification defines no 3D extension of it.
+in the `viewBox` coordinate system; the SVG 2 `viewBox`-to-viewport mapping
+(including `preserveAspectRatio`) then applies unchanged. The `viewBox`
+**MUST** remain 2D; this specification defines no 3D extension of it.
 
 ### 5.4 Projection mathematics
 
@@ -360,13 +361,14 @@ center `(cx, cy) = (mx + w/2, my + h/2)`.
 **Orthographic projection.** The projected point is:
 
 ```
-x_f = cx + xv
-y_f = cy − yv
+x_f = xv
+y_f = yv
 ```
 
-One user unit in view space is one user unit on the film plane; the `viewBox`
-therefore also fixes the orthographic extents, and no additional scale
-attributes are needed.
+View space and the film plane have the same orientation (`x` right, `y` down),
+so coordinates transfer without a flip; one user unit in view space is one
+user unit on the film plane, and the `viewBox` therefore also fixes the
+orthographic extents. No additional scale attributes are needed.
 
 **Perspective projection.** With `fov` in degrees, the film distance is
 
@@ -377,15 +379,17 @@ D = (h / 2) / tan(fov / 2)
 and the projected point is:
 
 ```
-x_f = cx + xv · D / d
-y_f = cy − yv · D / d
+x_f = xv · D / d
+y_f = yv · D / d
 ```
 
-This is a pinhole camera whose film plane is the `viewBox` rectangle at
-distance `D`; geometry at distance `D` in front of the camera is rendered at
-its view-space size, and geometry farther away is proportionally smaller. The
-`fov` semantics match CSS `perspective` with
-`perspective = D` (in user units).
+This is a pinhole camera: geometry at distance `D` in front of the camera is
+rendered at its view-space size, and geometry farther away is proportionally
+smaller. The `fov` semantics match CSS `perspective` with
+`perspective = D` (in user units). The optical axis passes through the
+`viewBox` origin, which is therefore the vanishing point; to center a
+perspective image, use a `viewBox` centered on the origin (for example,
+`viewBox="-50 -50 100 100"`).
 
 **Validity.** If the camera basis is degenerate — `p = t`, `u` parallel to
 `z_cam`, or a zero-length `u` — the projection is undefined; per §13, the
@@ -409,15 +413,21 @@ as the corresponding `z = 0` flat document.
 
 ### 5.6 Clipping
 
-A point is **visible** if and only if `near ≤ d < far` (§5.1), where `d` is
-the point's distance in front of the camera (§5.4). With the default values,
-this means every point in front of the camera is visible.
+A point is **visible** if and only if `near ≤ d < far`, where `d` is the
+point's distance in front of the camera (§5.4). The `near` and `far`
+attributes default to unbounded: depth clipping applies on a side only when
+that side is specified.
+
+- Under **perspective** projection, geometry at or behind the camera plane
+  (`d ≤ 0`) is never rendered, regardless of `near`.
+- Under **orthographic** projection there is no camera-plane culling: a
+  parallel projection is defined for every depth. This is what makes the
+  default camera a pure identity for geometry at any `z` (§5.5).
 
 A 3D renderer **MUST** clip geometry to the visible depth range: a segment or
-curve crossing the `near` or `far` boundary is clipped as if by a clip path at
+curve crossing a `near` or `far` boundary is clipped as if by a clip path at
 that boundary (the clip is performed on the 3D geometry before projection).
-Geometry at or behind the camera plane is not rendered. A 2D renderer performs
-no depth clipping.
+A 2D renderer performs no depth clipping.
 
 ---
 
@@ -435,10 +445,10 @@ section. This is the ideal degradation and requires no author action.
 
 ### 6.1 `line`
 
-| Attribute | Meaning |
-|-----------|---------|
-| `z1` | `z` of the start point; the line runs from `(x1, y1, z1)` to `(x2, y2, z2)` |
-| `z2` | `z` of the end point |
+| Attribute | Meaning                                                                     |
+| --------- | --------------------------------------------------------------------------- |
+| `z1`      | `z` of the start point; the line runs from `(x1, y1, z1)` to `(x2, y2, z2)` |
+| `z2`      | `z` of the end point                                                        |
 
 ```xml
 <line x1="10" y1="10" z1="0" x2="80" y2="60" z2="40"/>
@@ -448,9 +458,9 @@ The projected geometry is the projection of the 3D segment.
 
 ### 6.2 `rect`
 
-| Attribute | Meaning |
-|-----------|---------|
-| `z` | The rect lies in the plane `z = z` |
+| Attribute | Meaning                            |
+| --------- | ---------------------------------- |
+| `z`       | The rect lies in the plane `z = z` |
 
 The rect's geometry is the rectangle `(x, y)` to `(x + width, y + height)` in
 the plane `z = z`, including rounded corners (`rx`/`ry`). Volumetric boxes are
@@ -458,9 +468,9 @@ out of scope; authors model a box with two `rect` elements or with `path3d`.
 
 ### 6.3 `circle` and `ellipse`
 
-| Attribute | Meaning |
-|-----------|---------|
-| `cz` | The shape lies in the plane `z = cz` |
+| Attribute | Meaning                              |
+| --------- | ------------------------------------ |
+| `cz`      | The shape lies in the plane `z = cz` |
 
 The circle/ellipse geometry is the SVG 2 geometry translated to the plane
 `z = cz`. The radius/radii remain in-plane lengths. Spheres are not defined in
@@ -468,9 +478,9 @@ this version.
 
 ### 6.4 `image` and `foreignObject`
 
-| Attribute | Meaning |
-|-----------|---------|
-| `z` | The element's plane is `z = z` |
+| Attribute | Meaning                        |
+| --------- | ------------------------------ |
+| `z`       | The element's plane is `z = z` |
 
 The element occupies the same rectangle as in SVG 2, at depth `z`. Rendering
 of the raster/foreign content happens after projection (project-early
@@ -478,19 +488,19 @@ principle, §3.1): the content is mapped onto the projected rectangle.
 
 ### 6.5 `use`
 
-| Attribute | Meaning |
-|-----------|---------|
-| `z` | The `use` translation includes `z` |
+| Attribute | Meaning                            |
+| --------- | ---------------------------------- |
+| `z`       | The `use` translation includes `z` |
 
 The `use` element's implied translate becomes `(x, y, z)`, applied before the
 referenced content's own transforms. All other `use` semantics are unchanged.
 
 ### 6.6 `text` and `tspan`
 
-| Attribute | Meaning |
-|-----------|---------|
-| `z` | List of per-character `z` positions, aligned exactly as the `x`/`y` lists |
-| `dz` | List of per-character `z` deltas, aligned exactly as the `dx`/`dy` lists |
+| Attribute | Meaning                                                                   |
+| --------- | ------------------------------------------------------------------------- |
+| `z`       | List of per-character `z` positions, aligned exactly as the `x`/`y` lists |
+| `dz`      | List of per-character `z` deltas, aligned exactly as the `dx`/`dy` lists  |
 
 The `z` and `dz` lists follow, respectively, the exact alignment, repetition,
 and delta-chaining rules that SVG 2 defines for the `x`/`y` and `dx`/`dy`
@@ -560,7 +570,7 @@ and act on `x`/`y` only, leaving the current `z` unchanged).
 
 **Decision (freezes plan OQ-1).** The plan's "mixed 2D/3D commands" option is
 grammatically impossible: with optional `z`, the data `M 1 2 3 4 5 6` could be
-one 3D moveto plus one 3D implicit lineto *or* three 2D points — no parser can
+one 3D moveto plus one 3D implicit lineto _or_ three 2D points — no parser can
 decide. Since `path3d` is a new element with no legacy grammar to preserve
 (R3 applies to `path`, not to new elements), triples are mandatory. A 2D
 `d` value can be converted mechanically by appending `,0` to each coordinate
@@ -578,7 +588,7 @@ treats each subsequent triplet as an implicit `lineto` (relative if the
 moveto is relative).
 
 **Current point.** The current point is a 3D point; every command updates
-`x`, `y`, *and* `z`. `H`/`V` update only their axis and leave `z` unchanged.
+`x`, `y`, _and_ `z`. `H`/`V` update only their axis and leave `z` unchanged.
 `Z`/`z` returns to the subpath's start point in all three coordinates.
 
 **Reflection (S/T).** The reflected control point is reflected in all three
@@ -616,13 +626,13 @@ valid commands, disables rendering as in SVG 2.
 
 `polyline` and `polygon` gain one attribute:
 
-| Attribute | Value | Initial value | Animatable |
-|-----------|-------|---------------|------------|
-| `zs` | `<number-list>` (comma-wsp separated) | empty list | yes |
+| Attribute | Value                                 | Initial value | Animatable |
+| --------- | ------------------------------------- | ------------- | ---------- |
+| `zs`      | `<number-list>` (comma-wsp separated) | empty list    | yes        |
 
 The `points` attribute **MUST** continue to use the exact SVG 2 grammar and
 error handling (R3). The `zs` list is **parallel** to the parsed vertex list:
-its *i*-th number is the `z` of the *i*-th vertex of the `points` list, where
+its _i_-th number is the `z` of the _i_-th vertex of the `points` list, where
 vertices are counted in the order the SVG 2 grammar parses them.
 
 Alignment rules:
@@ -655,8 +665,8 @@ required.
 
 ### 9.1 `linearGradient`
 
-| Attribute | Meaning |
-|-----------|---------|
+| Attribute  | Meaning                                                        |
+| ---------- | -------------------------------------------------------------- |
 | `z1`, `z2` | The gradient vector runs from `(x1, y1, z1)` to `(x2, y2, z2)` |
 
 The gradient vector is 3D geometry: it is transformed by the referencing
@@ -667,10 +677,10 @@ exactly SVG 2's behavior (a `z1 = z2 = 0` vector projects to itself).
 
 ### 9.2 `radialGradient`
 
-| Attribute | Meaning |
-|-----------|---------|
-| `cz` | The gradient's center lies at `z = cz` |
-| `fz` | The gradient's focal point lies at `z = fz` |
+| Attribute | Meaning                                     |
+| --------- | ------------------------------------------- |
+| `cz`      | The gradient's center lies at `z = cz`      |
+| `fz`      | The gradient's focal point lies at `z = fz` |
 
 The center and focal point are 3D points `(cx, cy, cz)` and `(fx, fy, fz)`,
 projected per §3.1 like any geometry point; the projected center/focal point
@@ -717,13 +727,13 @@ documents with the semantics of SVG 2 and [SMIL], extended by this section.
 
 ### 10.2 Value types and interpolation
 
-| Attribute(s) | Value type | Interpolation |
-|--------------|-----------|----------------|
-| `z`, `z1`, `z2`, `cz`, `fz`, `dz` (feOffset), `fov`, `near`, `far` | `<number>` | Linear, per SMIL `<number>` |
-| `zs`, text/tspan `z`, text/tspan `dz` | `<number-list>` | Per-entry linear |
-| `position`, `target`, `up` | 3 numbers | Per-component linear |
-| `projection` | keyword | Discrete only |
-| `d` (on `path3d`) | path data | Per §10.4 |
+| Attribute(s)                                                       | Value type      | Interpolation               |
+| ------------------------------------------------------------------ | --------------- | --------------------------- |
+| `z`, `z1`, `z2`, `cz`, `fz`, `dz` (feOffset), `fov`, `near`, `far` | `<number>`      | Linear, per SMIL `<number>` |
+| `zs`, text/tspan `z`, text/tspan `dz`                              | `<number-list>` | Per-entry linear            |
+| `position`, `target`, `up`                                         | 3 numbers       | Per-component linear        |
+| `projection`                                                       | keyword         | Discrete only               |
+| `d` (on `path3d`)                                                  | path data       | Per §10.4                   |
 
 - `additive="sum"` on a number-valued attribute adds the animated value to
   the underlying value (a `z` delta), as [SMIL] defines for numbers.
@@ -740,12 +750,12 @@ documents with the semantics of SVG 2 and [SMIL], extended by this section.
 addition to the SVG 2 2D types (`translate`, `scale`, `rotate`, `skewX`,
 `skewY` — all unchanged):
 
-| `type` | `from`/`to`/`by` value |
-|--------|------------------------|
-| `translate3d` | 3 numbers: `tx ty tz` |
-| `scale3d` | 3 numbers: `sx sy sz` |
-| `rotateX`, `rotateY`, `rotateZ` | 1 number: angle in degrees |
-| `rotate3d` | 4 numbers: `ax ay az angle` (axis + angle in degrees) |
+| `type`                          | `from`/`to`/`by` value                                |
+| ------------------------------- | ----------------------------------------------------- |
+| `translate3d`                   | 3 numbers: `tx ty tz`                                 |
+| `scale3d`                       | 3 numbers: `sx sy sz`                                 |
+| `rotateX`, `rotateY`, `rotateZ` | 1 number: angle in degrees                            |
+| `rotate3d`                      | 4 numbers: `ax ay az angle` (axis + angle in degrees) |
 
 - Interpolation is per-component linear. For `rotate3d`, the angle
   interpolates and the axis is fixed; if the normalized axes of `from` and
@@ -772,7 +782,7 @@ of [SMIL] applies.
   the implied translation is the 3D point at the given distance along the
   referenced geometry, in the coordinate system of the animated element, so
   the motion includes `z`.
-- `rotate="auto"` uses the tangent of the *projected* outline (§3.1,
+- `rotate="auto"` uses the tangent of the _projected_ outline (§3.1,
   project-early principle).
 - The `animateMotion` `path` attribute remains the SVG 2 2D grammar (R3) and
   is never extended.
@@ -808,14 +818,14 @@ of [SMIL] applies.
 
 ### 12.1 Degradation summary (normative)
 
-| Feature | 2D renderer behavior | Normative basis |
-|---------|----------------------|-----------------|
-| `z`, `z1`, `z2`, `cz`, `fz`, `dz` attributes | Ignored; flat SVG 2 rendering | R1 |
-| `zs` attribute | Ignored; flat SVG 2 rendering | R1 |
-| `path3d` element | Not rendered (silently) | R2 |
-| `camera` element | Not rendered (silently); default camera applies | R2 |
-| `camera` attribute on `svg` | Ignored | R1 |
-| 3D transform functions | Already valid in SVG 2; z effect invisible in 2D rendering | R4 |
+| Feature                                      | 2D renderer behavior                                       | Normative basis |
+| -------------------------------------------- | ---------------------------------------------------------- | --------------- |
+| `z`, `z1`, `z2`, `cz`, `fz`, `dz` attributes | Ignored; flat SVG 2 rendering                              | R1              |
+| `zs` attribute                               | Ignored; flat SVG 2 rendering                              | R1              |
+| `path3d` element                             | Not rendered (silently)                                    | R2              |
+| `camera` element                             | Not rendered (silently); default camera applies            | R2              |
+| `camera` attribute on `svg`                  | Ignored                                                    | R1              |
+| 3D transform functions                       | Already valid in SVG 2; z effect invisible in 2D rendering | R4              |
 
 ### 12.2 Author fallback for `path3d`
 
@@ -836,8 +846,8 @@ Rules:
 
 - The SVG 3D extension identifier is **`urn:svg3d:1.0`**. The value is an
   opaque string compared for equality. A 3D-conformant renderer **MUST**
-  evaluate `requiredExtensions` as *true* for this identifier; a 2D renderer
-  evaluates it as *false* per SVG 2 §5.6.4.
+  evaluate `requiredExtensions` as _true_ for this identifier; a 2D renderer
+  evaluates it as _false_ per SVG 2 §5.6.4.
 - A 2D renderer's unknown-element handling (R2) does not affect `switch`
   child selection: the fallback `path` is rendered, the `path3d` is not.
 
@@ -852,18 +862,18 @@ the defined behavior.
 This specification follows SVG 2's error philosophy: render what is
 deterministically recoverable, and degrade to the SVG 2 interpretation.
 
-| Situation | Behavior |
-|-----------|----------|
-| Invalid value for `z`, `z1`, `z2`, `cz`, `fz`, `dz`, `zs` entry | Use the initial value (`0` / empty list); element renders |
-| `zs` count mismatch | §8.1 alignment rules |
-| `path3d` path data error | SVG 2 §9.5.4 model with §7.2 parameter counts |
-| `path3d` on a 2D renderer | Not rendered (R2); §12.2 fallback applies |
-| Animation `from`/`to`/`values` with mismatched list or command counts | No smooth interpolation; discrete fallback per [SMIL] (§10.2, §10.4) |
-| Invalid `camera` attribute value (e.g. a malformed number in `position`) | Use that attribute's initial value |
-| `camera` URL reference unresolvable | Fall through the §5.2 resolution order |
-| Degenerate camera (§5.4 validity) | Use the default camera for that viewport |
-| Point behind the camera plane | Not rendered; §5.6 depth clipping applies |
-| `pathLength` on `path3d` | Ignored (§7.1) |
+| Situation                                                                | Behavior                                                             |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Invalid value for `z`, `z1`, `z2`, `cz`, `fz`, `dz`, `zs` entry          | Use the initial value (`0` / empty list); element renders            |
+| `zs` count mismatch                                                      | §8.1 alignment rules                                                 |
+| `path3d` path data error                                                 | SVG 2 §9.5.4 model with §7.2 parameter counts                        |
+| `path3d` on a 2D renderer                                                | Not rendered (R2); §12.2 fallback applies                            |
+| Animation `from`/`to`/`values` with mismatched list or command counts    | No smooth interpolation; discrete fallback per [SMIL] (§10.2, §10.4) |
+| Invalid `camera` attribute value (e.g. a malformed number in `position`) | Use that attribute's initial value                                   |
+| `camera` URL reference unresolvable                                      | Fall through the §5.2 resolution order                               |
+| Degenerate camera (§5.4 validity)                                        | Use the default camera for that viewport                             |
+| Point behind the camera plane (perspective)                              | Not rendered; §5.6 depth clipping applies                            |
+| `pathLength` on `path3d`                                                 | Ignored (§7.1)                                                       |
 
 A 2D renderer implements none of this table beyond what SVG 2 already
 requires of it; every row is written so that the 2D behavior is SVG 2's own
@@ -890,24 +900,24 @@ behavior.
 
 ### New elements
 
-| Element | Namespace | Categories | Purpose |
-|---------|-----------|------------|---------|
-| `path3d` | SVG | graphics element | Path outline in 3D (§7) |
-| `camera` | SVG | never-rendered element | Viewport camera (§5) |
+| Element  | Namespace | Categories             | Purpose                 |
+| -------- | --------- | ---------------------- | ----------------------- |
+| `path3d` | SVG       | graphics element       | Path outline in 3D (§7) |
+| `camera` | SVG       | never-rendered element | Viewport camera (§5)    |
 
 ### New attributes on existing elements
 
-| Element(s) | Attribute | Initial | Mirrors |
-|------------|-----------|---------|---------|
-| `line` | `z1`, `z2` | `0` | `x1/y1`, `x2/y2` |
-| `rect`, `image`, `foreignObject`, `use` | `z` | `0` | `x`, `y` |
-| `circle`, `ellipse` | `cz` | `0` | `cx`, `cy` |
-| `text`, `tspan` | `z`, `dz` | empty list | `x`/`y`, `dx`/`dy` |
-| `polyline`, `polygon` | `zs` | empty list | parallel to `points` |
-| `linearGradient` | `z1`, `z2` | `0` | `x1/y1`, `x2/y2` |
-| `radialGradient` | `cz`, `fz` | `0` | `cx/cy`, `fx/fy` |
-| `feOffset` | `dz` | `0` | `dx`, `dy` |
-| `svg` | `camera` | `none` | — |
+| Element(s)                              | Attribute  | Initial    | Mirrors              |
+| --------------------------------------- | ---------- | ---------- | -------------------- |
+| `line`                                  | `z1`, `z2` | `0`        | `x1/y1`, `x2/y2`     |
+| `rect`, `image`, `foreignObject`, `use` | `z`        | `0`        | `x`, `y`             |
+| `circle`, `ellipse`                     | `cz`       | `0`        | `cx`, `cy`           |
+| `text`, `tspan`                         | `z`, `dz`  | empty list | `x`/`y`, `dx`/`dy`   |
+| `polyline`, `polygon`                   | `zs`       | empty list | parallel to `points` |
+| `linearGradient`                        | `z1`, `z2` | `0`        | `x1/y1`, `x2/y2`     |
+| `radialGradient`                        | `cz`, `fz` | `0`        | `cx/cy`, `fx/fy`     |
+| `feOffset`                              | `dz`       | `0`        | `dx`, `dy`           |
+| `svg`                                   | `camera`   | `none`     | —                    |
 
 ### Naming convention (normative)
 
@@ -941,20 +951,41 @@ behavior.
    decisions were fixed as follows, each chosen for simplicity and strict
    SVG 2 compatibility:
 
-   | Issue | Resolution |
-   |-------|------------|
-   | Stroke width in 3D | Screen-space constant width, as a rule of this specification (§3.1) |
-   | `pathLength` on `path3d` | Ignored; not defined for `path3d` (§7.1) |
-   | Volumetric `rect` | Out of scope; planar only — use two `rect`s or `path3d` (§6.2) |
-   | Glyph orientation | Glyphs never rotate toward the camera (§6.6) |
-   | `pattern` depth | No depth attribute; `patternTransform` is the only `z` placement (§9.4) |
-   | Extension identifier | Frozen as `urn:svg3d:1.0` (§12.2) |
-   | `camera` on `svg` | Plain XML attribute; explicitly not a presentation property; no CSS integration (§5.2) |
-   | Marker/text-on-path in 3D | Operate on projected outlines, definitively (§3.1) |
-   | `animateMotion` | Moves along projected outlines via `mpath`; its `path` attribute stays 2D (R3) (§3.1, §10.5) |
+   | Issue                     | Resolution                                                                                   |
+   | ------------------------- | -------------------------------------------------------------------------------------------- |
+   | Stroke width in 3D        | Screen-space constant width, as a rule of this specification (§3.1)                          |
+   | `pathLength` on `path3d`  | Ignored; not defined for `path3d` (§7.1)                                                     |
+   | Volumetric `rect`         | Out of scope; planar only — use two `rect`s or `path3d` (§6.2)                               |
+   | Glyph orientation         | Glyphs never rotate toward the camera (§6.6)                                                 |
+   | `pattern` depth           | No depth attribute; `patternTransform` is the only `z` placement (§9.4)                      |
+   | Extension identifier      | Frozen as `urn:svg3d:1.0` (§12.2)                                                            |
+   | `camera` on `svg`         | Plain XML attribute; explicitly not a presentation property; no CSS integration (§5.2)       |
+   | Marker/text-on-path in 3D | Operate on projected outlines, definitively (§3.1)                                           |
+   | `animateMotion`           | Moves along projected outlines via `mpath`; its `path` attribute stays 2D (R3) (§3.1, §10.5) |
+
 10. **D-10 — Animation is SMIL-only, in 3D** (§10). SMIL Animation is the sole
-   animation mechanism; CSS animations/transitions/WAAPI are out of scope.
-   `animateTransform` gains `translate3d`, `scale3d`, `rotateX/Y/Z`,
-   `rotate3d`; `path3d` `d` animates under the identical-command-structure
-   rule; `animateMotion` over 3D geometry translates in 3D; camera attributes
-   animate (flythroughs).
+    animation mechanism; CSS animations/transitions/WAAPI are out of scope.
+    `animateTransform` gains `translate3d`, `scale3d`, `rotateX/Y/Z`,
+    `rotate3d`; `path3d` `d` animates under the identical-command-structure
+    rule; `animateMotion` over 3D geometry translates in 3D; camera attributes
+    animate (flythroughs).
+11. **D-11 — Projection anchor corrected** (§5.4). The orthographic and
+    perspective formulas were rewritten to anchor the film at the `viewBox`
+    origin with **no y flip** (view space and film plane are both y-down).
+    The earlier center-anchored, y-flipped formulas contradicted the §5.5
+    default-camera identity guarantee and the y-down conventions of §4.1.
+    The optical axis passes through the `viewBox` origin (the perspective
+    vanishing point); center perspective images with a centered `viewBox`.
+12. **D-12 — Depth-visibility model corrected** (§5.1, §5.6), found while
+    implementing the reference viewer. `near`/`far` now default to
+    _unbounded_; camera-plane culling (`d ≤ 0`) is perspective-only;
+    orthographic projection is defined for every depth. The original rule
+    (`near` default `0`, camera-plane culling for all projections) culled
+    geometry at `z ≥ 0` under the default camera and broke the §5.5 identity
+    guarantee.
+13. **D-10 — Animation is SMIL-only, in 3D** (§10). SMIL Animation is the sole
+    animation mechanism; CSS animations/transitions/WAAPI are out of scope.
+    `animateTransform` gains `translate3d`, `scale3d`, `rotateX/Y/Z`,
+    `rotate3d`; `path3d` `d` animates under the identical-command-structure
+    rule; `animateMotion` over 3D geometry translates in 3D; camera attributes
+    animate (flythroughs).

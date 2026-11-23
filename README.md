@@ -16,6 +16,27 @@ specification-writing plan, including:
   (CSS Transforms, filter lighting),
 - the chapter outline, open questions, and milestones for writing the spec.
 
+## Reference viewer
+
+`<svg3d-viewer>` is a Lit web component that implements the spec's
+project-early pipeline (§3.1): it reads SVG 3D markup, projects the geometry
+through the active `<camera>`, and paints the result with the browser's
+unmodified SVG 2 renderer.
+
+```html
+<script type="module" src="./src/index.ts"></script>
+<svg3d-viewer style="width: 480px; height: 360px"
+  .markup='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
+    <camera projection="perspective" fov="50" position="220 180 280" target="50 50 50"/>
+    <line x1="0" y1="0" z1="0" x2="100" y2="100" z2="100"/>
+  </svg>'>
+</svg3d-viewer>
+```
+
+Run `pnpm install && pnpm storybook` for interactive examples (shapes,
+`path3d` grammar, camera flythroughs, spec examples). `pnpm test` runs the
+Node smoke tests of the projection and path grammars.
+
 ## Repository layout
 
 - `docs/plan.md` — the specification-writing plan (compatibility rules,

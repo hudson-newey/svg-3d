@@ -37,24 +37,24 @@ identifies (a) what the spec will say, (b) which SVG 2 rules constrain it, and
 
 These passages decide every compatibility question below. Cite them in the spec.
 
-| # | SVG 2 rule | Consequence for the 3D extension |
-|---|------------|----------------------------------|
-| G1 | §5.10 *Foreign namespaces and private data*: "The SVG user agent must include unknown attributes in the DOM but should otherwise ignore unknown attributes." | **New attributes are a safe extension channel.** A 2D renderer ignores `z`, `z1`, `cz`, … and renders the flat shape. |
-| G2 | §5.10: unknown (foreign-namespaced) elements are "included in the DOM but … ignore[d] and exclude[d] … for rendering purposes." | **New elements are a safe extension channel with silent fallback**: a 2D renderer drops them entirely (no partial rendering). |
-| G3 | §9.5.4 *Error handling in path data*: the user agent "shall render a 'path' element up to (but not including) the path command containing the first error"; a command with a wrong parameter count "is rendered up to and including the last correctly defined path segment". The spec's own example is `M 10,10 L 20,20,30`. | **Path data must never be extended in place.** See §4.1. |
-| G4 | §9.3.1 (moveto): "If a moveto is followed by multiple pairs of coordinates, the subsequent pairs are treated as implicit lineto commands." | A third coordinate after `M x y` is *not ignored*: with an odd trailing number it is a parse error (G3 truncates); with an even count it is silently consumed as implicit lineto geometry. |
-| G5 | §10.3/§10.4 (`polyline`/`polygon` `points`, grammar `[ <number>+ ]#`): "If an odd number of coordinates is provided, then the element is in error … the user agent will drop the last, odd coordinate and otherwise render the shape." | **`points` must never carry interleaved `z` values.** `x y z x y z` reparses as pairs `(x,y),(z,x),(y,z)` — corrupted geometry with no error. |
-| G6 | SVG 2 defines `transform` as the CSS `transform` property (4×4 homogeneous matrices per CSS Transforms, referenced from the SVG 2 coordinate-systems chapter). | **3D transform functions (`translate3d`, `rotate3d`, `matrix3d`, `perspective`, …) are already valid** on `transform`, `gradientTransform`, `patternTransform` for any SVG 2-compliant renderer. No new transform grammar is needed. Transforms are used for **geometry placement only** — the camera is a separate viewport concept (§4.2.3), never expressed with `transform`. |
-| G7 | Precedent: `fePointLight` and `feSpotLight` (Filter Effects 1) already define `x`, `y`, `z`, `pointsAtX/Y/Z`; `feDistantLight` defines an `azimuth`/`elevation` direction in 3D. | There is in-spec precedent for adding `z` as a plain attribute. Follow the same pattern and cite it. |
-| G8 | SVG 2 geometry attributes on shapes (`x`, `y`, `cx`, `cy`, …) are **geometry properties** (CSS properties with presentation-attribute syntax). | New `z`-attributes should be geometry properties too: initial value `0`, invalid values fall back to the initial value rather than disabling rendering. |
+| #   | SVG 2 rule                                                                                                                                                                                                                                                                                                                    | Consequence for the 3D extension                                                                                                                                                                                                                                                                                                                                                 |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| G1  | §5.10 _Foreign namespaces and private data_: "The SVG user agent must include unknown attributes in the DOM but should otherwise ignore unknown attributes."                                                                                                                                                                  | **New attributes are a safe extension channel.** A 2D renderer ignores `z`, `z1`, `cz`, … and renders the flat shape.                                                                                                                                                                                                                                                            |
+| G2  | §5.10: unknown (foreign-namespaced) elements are "included in the DOM but … ignore[d] and exclude[d] … for rendering purposes."                                                                                                                                                                                               | **New elements are a safe extension channel with silent fallback**: a 2D renderer drops them entirely (no partial rendering).                                                                                                                                                                                                                                                    |
+| G3  | §9.5.4 _Error handling in path data_: the user agent "shall render a 'path' element up to (but not including) the path command containing the first error"; a command with a wrong parameter count "is rendered up to and including the last correctly defined path segment". The spec's own example is `M 10,10 L 20,20,30`. | **Path data must never be extended in place.** See §4.1.                                                                                                                                                                                                                                                                                                                         |
+| G4  | §9.3.1 (moveto): "If a moveto is followed by multiple pairs of coordinates, the subsequent pairs are treated as implicit lineto commands."                                                                                                                                                                                    | A third coordinate after `M x y` is _not ignored_: with an odd trailing number it is a parse error (G3 truncates); with an even count it is silently consumed as implicit lineto geometry.                                                                                                                                                                                       |
+| G5  | §10.3/§10.4 (`polyline`/`polygon` `points`, grammar `[ <number>+ ]#`): "If an odd number of coordinates is provided, then the element is in error … the user agent will drop the last, odd coordinate and otherwise render the shape."                                                                                        | **`points` must never carry interleaved `z` values.** `x y z x y z` reparses as pairs `(x,y),(z,x),(y,z)` — corrupted geometry with no error.                                                                                                                                                                                                                                    |
+| G6  | SVG 2 defines `transform` as the CSS `transform` property (4×4 homogeneous matrices per CSS Transforms, referenced from the SVG 2 coordinate-systems chapter).                                                                                                                                                                | **3D transform functions (`translate3d`, `rotate3d`, `matrix3d`, `perspective`, …) are already valid** on `transform`, `gradientTransform`, `patternTransform` for any SVG 2-compliant renderer. No new transform grammar is needed. Transforms are used for **geometry placement only** — the camera is a separate viewport concept (§4.2.3), never expressed with `transform`. |
+| G7  | Precedent: `fePointLight` and `feSpotLight` (Filter Effects 1) already define `x`, `y`, `z`, `pointsAtX/Y/Z`; `feDistantLight` defines an `azimuth`/`elevation` direction in 3D.                                                                                                                                              | There is in-spec precedent for adding `z` as a plain attribute. Follow the same pattern and cite it.                                                                                                                                                                                                                                                                             |
+| G8  | SVG 2 geometry attributes on shapes (`x`, `y`, `cx`, `cy`, …) are **geometry properties** (CSS properties with presentation-attribute syntax).                                                                                                                                                                                | New `z`-attributes should be geometry properties too: initial value `0`, invalid values fall back to the initial value rather than disabling rendering.                                                                                                                                                                                                                          |
 
 ### 2.1 Answering the motivating question directly
 
-*"If I put a third coordinate in `path`'s `d`, would renderers simply ignore it?"*
+_"If I put a third coordinate in `path`'s `d`, would renderers simply ignore it?"_
 
 **No — and a compliant renderer behaves worse than ignoring it.** Per G3/G4:
 
-- `d="M 10,10,30"` → the trailing `30` starts an *implicit lineto* that is missing
+- `d="M 10,10,30"` → the trailing `30` starts an _implicit lineto_ that is missing
   its second coordinate → error → the path renders only the moveto, i.e. the
   geometry silently disappears (or truncates there, for implementations that
   render up to the error).
@@ -62,11 +62,11 @@ These passages decide every compatibility question below. Cite them in the spec.
   reinterpreted as 2D geometry.
 
 Same for `points="1,2,3"` (G5): error, last coordinate dropped; and
-`points="1,2,3,4,5,6"` silently becomes three *wrong* 2D vertices.
+`points="1,2,3,4,5,6"` silently becomes three _wrong_ 2D vertices.
 
 **Therefore `z` values must travel in channels that the SVG 2 grammar ignores by
 specification: new attributes (G1) and new elements (G2). New path-data command
-letters are *not* such a channel** — an unknown command letter is an error under
+letters are _not_ such a channel** — an unknown command letter is an error under
 G3, so a compliant 2D renderer truncates the path at that command (partial,
 misleading rendering). That rules out smuggling 3D into `d` even with new
 letters.
@@ -78,13 +78,13 @@ letters.
 Every 3D feature falls into one of three mechanisms. The spec will state which
 mechanism each element uses, and the degradation column is normative.
 
-| Mechanism | How a 2D SVG 2 renderer behaves | Use for |
-|-----------|--------------------------------|---------|
-| **M-A: new attribute** on an existing element | Renders the existing 2D shape (`z` ignored, G1) | Elements whose 2D grammar lives in *attributes*, not *values* |
-| **M-B: new element** | Renders nothing (G2); optional flat fallback via `switch`/`requiredExtensions` | Elements whose geometry lives in *value grammars* that cannot be split (`path`), and the viewport `camera` |
-| **M-C: already-3D channel** (CSS Transforms / filter lighting) | Renders the 2D projection it already implements | `transform`, gradient/pattern transforms, lighting filters |
+| Mechanism                                                      | How a 2D SVG 2 renderer behaves                                                | Use for                                                                                                    |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| **M-A: new attribute** on an existing element                  | Renders the existing 2D shape (`z` ignored, G1)                                | Elements whose 2D grammar lives in _attributes_, not _values_                                              |
+| **M-B: new element**                                           | Renders nothing (G2); optional flat fallback via `switch`/`requiredExtensions` | Elements whose geometry lives in _value grammars_ that cannot be split (`path`), and the viewport `camera` |
+| **M-C: already-3D channel** (CSS Transforms / filter lighting) | Renders the 2D projection it already implements                                | `transform`, gradient/pattern transforms, lighting filters                                                 |
 
-Fallback elements that *do* render flat in 2D (M-A) are preferred over elements
+Fallback elements that _do_ render flat in 2D (M-A) are preferred over elements
 that render nothing (M-B) wherever the geometry allows it, because M-A
 degradation is strictly better for authors.
 
@@ -98,20 +98,20 @@ The 2D grammar of these elements is entirely attribute-based; unknown
 attributes are ignored (G1), so 2D renderers keep rendering the flat shape.
 All new attributes become geometry properties (G8) with initial value `0`.
 
-| Element | Existing | Add | Notes |
-|---------|----------|-----|-------|
-| `line` | `x1 y1 x2 y2` | `z1`, `z2` | The motivating case. 3D segment from `(x1,y1,z1)` to `(x2,y2,z2)`. |
-| `circle` | `cx cy r` | `cz` | Circle lies in the plane `z = cz`. Radius stays in-plane. |
-| `ellipse` | `cx cy rx ry` | `cz` | Same plane model as `circle`. |
-| `rect` | `x y width height rx ry` | `z` | Plane `z = z`. Volumetric box: open question OQ-4. |
-| `image` | `x y width height` | `z` | Plane placement. |
-| `foreignObject` | `x y width height` | `z` | Plane placement. |
-| `use` | `x y width height` | `z` | Translation includes z (like `x`/`y` today). |
-| `text`, `tspan` | `x y dx dy` (lists) | `z`, `dz` (lists) | Mirrors the existing `x,y` + delta-list pattern exactly. Per-glyph `z` lists align 1:1 with `x`/`y` lists. |
-| `linearGradient` | `x1 y1 x2 y2` | `z1`, `z2` | Identical shape to `line`. |
-| `radialGradient` | `cx cy r fx fy fr` | `cz`, `fz` | Naming follows the `cx`→`cz` / focal-point convention. |
-| `feOffset` | `dx dy` | `dz` | Only raster-primitive that is a pure translation. |
-| lighting filters | — | (already 3D, G7) | No change; cite as precedent. |
+| Element          | Existing                 | Add               | Notes                                                                                                      |
+| ---------------- | ------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| `line`           | `x1 y1 x2 y2`            | `z1`, `z2`        | The motivating case. 3D segment from `(x1,y1,z1)` to `(x2,y2,z2)`.                                         |
+| `circle`         | `cx cy r`                | `cz`              | Circle lies in the plane `z = cz`. Radius stays in-plane.                                                  |
+| `ellipse`        | `cx cy rx ry`            | `cz`              | Same plane model as `circle`.                                                                              |
+| `rect`           | `x y width height rx ry` | `z`               | Plane `z = z`. Volumetric box: open question OQ-4.                                                         |
+| `image`          | `x y width height`       | `z`               | Plane placement.                                                                                           |
+| `foreignObject`  | `x y width height`       | `z`               | Plane placement.                                                                                           |
+| `use`            | `x y width height`       | `z`               | Translation includes z (like `x`/`y` today).                                                               |
+| `text`, `tspan`  | `x y dx dy` (lists)      | `z`, `dz` (lists) | Mirrors the existing `x,y` + delta-list pattern exactly. Per-glyph `z` lists align 1:1 with `x`/`y` lists. |
+| `linearGradient` | `x1 y1 x2 y2`            | `z1`, `z2`        | Identical shape to `line`.                                                                                 |
+| `radialGradient` | `cx cy r fx fy fr`       | `cz`, `fz`        | Naming follows the `cx`→`cz` / focal-point convention.                                                     |
+| `feOffset`       | `dx dy`                  | `dz`              | Only raster-primitive that is a pure translation.                                                          |
+| lighting filters | —                        | (already 3D, G7)  | No change; cite as precedent.                                                                              |
 
 Naming conventions (to be frozen as normative rules in the spec):
 
@@ -122,7 +122,7 @@ Naming conventions (to be frozen as normative rules in the spec):
 
 ### 4.2 Category B — value grammars that cannot be extended in place
 
-#### 4.2.1 `path` / `d`  → new `path3d` element (mechanism M-B)
+#### 4.2.1 `path` / `d` → new `path3d` element (mechanism M-B)
 
 `d` is a single string grammar; G3/G4 make every in-place option invalid:
 
@@ -136,13 +136,13 @@ renderer's behavior is spec-defined silence (G2) instead of misparse.
 
 Grammar decision for the spec (OQ-1):
 
-- *Option 1 — same commands, triples.* `M x y z`, `L x y z`, `C x1 y1 z1 … x3 y3 z3`, …
+- _Option 1 — same commands, triples._ `M x y z`, `L x y z`, `C x1 y1 z1 … x3 y3 z3`, …
   Reuses the mental model and code paths; every point carries `z`.
-- *Option 2 — mixed 2D/3D commands.* Keep existing 2D commands valid inside
+- _Option 2 — mixed 2D/3D commands._ Keep existing 2D commands valid inside
   `path3d` (missing `z` = `0`) and add nothing; `path3d` then differs from `path`
   only by being parsed as 3D. Simplest migration: an author can copy any `d`
   attribute into `path3d` unchanged.
-- *Option 3 — z-per-command suffix.* New commands that take a trailing `z`.
+- _Option 3 — z-per-command suffix._ New commands that take a trailing `z`.
   More compact, but a third grammar variant to document and test.
 
 Recommendation: Option 2 as the baseline (full SVG 2 `svg-path` grammar is
@@ -154,25 +154,25 @@ Backwards compatibility of the element itself: 2D renderers render nothing
 (G2). The spec defines a fallback idiom so authors get flat rendering in 2D
 contexts (see §5).
 
-#### 4.2.2 `polygon` / `polyline` / `points`  → parallel z-list attribute (mechanism M-A)
+#### 4.2.2 `polygon` / `polyline` / `points` → parallel z-list attribute (mechanism M-A)
 
 G5 forbids interleaving. Two viable designs (OQ-2):
 
-- *Option 1 — parallel attribute (recommended).* Keep `points` exactly as SVG 2
-  defines it; add `zs="<number-list>"` (name TBD, see OQ-3) whose *i*-th number
-  is the `z` of the *i*-th parsed vertex. Degradation is ideal: a 2D renderer
+- _Option 1 — parallel attribute (recommended)._ Keep `points` exactly as SVG 2
+  defines it; add `zs="<number-list>"` (name TBD, see OQ-3) whose _i_-th number
+  is the `z` of the _i_-th parsed vertex. Degradation is ideal: a 2D renderer
   ignores `zs` and still draws the flat polygon (M-A). Count mismatch →
   missing values default to `0`.
-- *Option 2 — new `polygon3d`/`polyline3d` elements.* Cleaner 3D story, but
+- _Option 2 — new `polygon3d`/`polyline3d` elements._ Cleaner 3D story, but
   degradation is "renders nothing" (M-B) — worse than Option 1 for no
   functional gain, since `points`' grammar is separable.
 
-Recommendation: Option 1. Reserve `polygon3d`/`polyline3d` as *aliases* only if
+Recommendation: Option 1. Reserve `polygon3d`/`polyline3d` as _aliases_ only if
 drafting reveals alignment problems.
 
 #### 4.2.3 Camera & viewport — new `camera` element (mechanism M-B); `viewBox` unchanged
 
-`viewBox` keeps its exact SVG 2 meaning: it describes the 2D projection *plane*
+`viewBox` keeps its exact SVG 2 meaning: it describes the 2D projection _plane_
 — the film onto which 3D geometry is projected — and `preserveAspectRatio`
 continues to control the projected-image-to-viewport mapping.
 
@@ -219,7 +219,7 @@ Design points for the spec (OQ-5):
 
 #### 4.2.4 Things deliberately left 2D in the first version
 
-The spec must explicitly state what does *not* get `z` in v1, so scope stays
+The spec must explicitly state what does _not_ get `z` in v1, so scope stays
 testable:
 
 - `marker` orientation: `orient="auto"` is defined by the 2D tangent. 3D marker
@@ -234,8 +234,8 @@ testable:
 ### 4.3 Category C — already 3D, no grammar work (mechanism M-C)
 
 - `transform`, `gradientTransform`, `patternTransform`: 3D functions are
-  already valid CSS `transform` values (G6). The spec adds only *rendering
-  semantics* (how a 4×4-transformed plane projects) and conformance wording.
+  already valid CSS `transform` values (G6). The spec adds only _rendering
+  semantics_ (how a 4×4-transformed plane projects) and conformance wording.
 - `fePointLight`, `feSpotLight`, `feDistantLight`: already carry `z` (G7).
 
 ---
@@ -263,6 +263,7 @@ each mechanism, and the author-facing fallback idioms:
    The spec freezes the extension identifier as `urn:svg3d:1.0`, defines
    `requiredExtensions` evaluation for SVG-3D support, and states that
    `switch` child selection is unaffected by unknown-element handling (G2).
+
 3. **Camera**: a `camera` element is unknown to a 2D renderer (G2) and is
    skipped; the viewport then uses the default orthographic camera (§4.2.3),
    which reproduces SVG 2's flat rendering exactly. No author action required.
@@ -273,14 +274,14 @@ each mechanism, and the author-facing fallback idioms:
 
 Mirror SVG 2's error philosophy (render-what-you-can, deterministic fallback):
 
-| Situation | Spec behavior |
-|-----------|---------------|
-| Invalid `z`/`cz`/`z1`/… attribute value | Geometry property rules (G8): fall back to initial value `0`; element still renders |
-| `zs`-list length ≠ vertex count | Missing `z` → `0`; extra values ignored |
-| `path3d` data errors | Same model as SVG 2 §9.5.4: render up to the last well-defined segment, with 3D coordinates |
-| `path3d` unsupported by renderer | G2: not rendered; §5 fallback applies |
-| Invalid `camera` attribute value | Ignore the invalid value; use that attribute's initial value; degenerate camera geometry (e.g. zero-length `up`, `position` = `target`) → use the default camera |
-| Zero-width/zero-height + `z` interactions | Reuse SVG 2 rules unchanged (they are z-independent) |
+| Situation                                 | Spec behavior                                                                                                                                                    |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Invalid `z`/`cz`/`z1`/… attribute value   | Geometry property rules (G8): fall back to initial value `0`; element still renders                                                                              |
+| `zs`-list length ≠ vertex count           | Missing `z` → `0`; extra values ignored                                                                                                                          |
+| `path3d` data errors                      | Same model as SVG 2 §9.5.4: render up to the last well-defined segment, with 3D coordinates                                                                      |
+| `path3d` unsupported by renderer          | G2: not rendered; §5 fallback applies                                                                                                                            |
+| Invalid `camera` attribute value          | Ignore the invalid value; use that attribute's initial value; degenerate camera geometry (e.g. zero-length `up`, `position` = `target`) → use the default camera |
+| Zero-width/zero-height + `z` interactions | Reuse SVG 2 rules unchanged (they are z-independent)                                                                                                             |
 
 ---
 
@@ -290,23 +291,23 @@ The spec will be authored as a standalone module ("SVG 3D Level 1") that
 patches SVG 2 by reference, following the structure conventions of W3C SVG
 modules.
 
-| # | Chapter | Content | Pulls from |
-|---|---------|---------|-----------|
-| 1 | Introduction | Goals, scope, non-goals (§1 above) | §1 |
-| 2 | Conformance | SVG 2 dependency, 2D-conformance profile = SVG 2 + nothing; 3D-conformance profile | §2, §5 |
-| 3 | Rendering model | 2D paint model unchanged; add projection stage; `camera` element, `camera` attribute on `svg`, and default camera (orthographic, SVG 2-identical); painter's-algorithm z-ordering definition | §4.2.3, OQ-5 |
-| 4 | Coordinate systems | 3D user space; relationship to CSS Transforms 4×4 matrices (G6); transform ordering; explicit rule that transforms never define the camera | §4.3 |
-| 5 | Basic shapes | All Category A attribute tables (§4.1), each with: syntax, geometry-property status, 2D degradation, examples | §4.1 |
-| 6 | `path3d` | New element + grammar (OQ-1 decision), error handling, fallback idiom | §4.2.1, §5 |
-| 7 | Point-list shapes | `zs` parallel attribute (OQ-2/OQ-3), alignment rules, error handling | §4.2.2 |
-| 8 | Paint servers | Gradient `z` attributes; gradient units in 3D | §4.1 |
-| 9 | Text | `z`/`dz` lists; explicit deferrals (textPath 3D) | §4.1, §4.2.4 |
-| 10 | Filters | Lighting = already 3D (G7); `feOffset.dz`; everything else stays 2D | §4.1, §4.2.4 |
-| 11 | Fallback & extensibility | `switch`/`requiredExtensions` idiom; registered extension URI; unknown-element rules restated (incl. `camera` default-camera fallback) | §5 |
-| 12 | Error handling | Table from §6 of this plan | §6 |
-| 13 | Security/privacy & accessibility | Carry over SVG 2 boilerplate; assess 3D additions | — |
-| A | Attribute/index appendices | Full attribute table, mapping each new attribute to the SVG 2 element/attribute it mirrors | §4 |
-| B | Changes since SVG 2 | Standard changes appendix | — |
+| #   | Chapter                          | Content                                                                                                                                                                                      | Pulls from   |
+| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 1   | Introduction                     | Goals, scope, non-goals (§1 above)                                                                                                                                                           | §1           |
+| 2   | Conformance                      | SVG 2 dependency, 2D-conformance profile = SVG 2 + nothing; 3D-conformance profile                                                                                                           | §2, §5       |
+| 3   | Rendering model                  | 2D paint model unchanged; add projection stage; `camera` element, `camera` attribute on `svg`, and default camera (orthographic, SVG 2-identical); painter's-algorithm z-ordering definition | §4.2.3, OQ-5 |
+| 4   | Coordinate systems               | 3D user space; relationship to CSS Transforms 4×4 matrices (G6); transform ordering; explicit rule that transforms never define the camera                                                   | §4.3         |
+| 5   | Basic shapes                     | All Category A attribute tables (§4.1), each with: syntax, geometry-property status, 2D degradation, examples                                                                                | §4.1         |
+| 6   | `path3d`                         | New element + grammar (OQ-1 decision), error handling, fallback idiom                                                                                                                        | §4.2.1, §5   |
+| 7   | Point-list shapes                | `zs` parallel attribute (OQ-2/OQ-3), alignment rules, error handling                                                                                                                         | §4.2.2       |
+| 8   | Paint servers                    | Gradient `z` attributes; gradient units in 3D                                                                                                                                                | §4.1         |
+| 9   | Text                             | `z`/`dz` lists; explicit deferrals (textPath 3D)                                                                                                                                             | §4.1, §4.2.4 |
+| 10  | Filters                          | Lighting = already 3D (G7); `feOffset.dz`; everything else stays 2D                                                                                                                          | §4.1, §4.2.4 |
+| 11  | Fallback & extensibility         | `switch`/`requiredExtensions` idiom; registered extension URI; unknown-element rules restated (incl. `camera` default-camera fallback)                                                       | §5           |
+| 12  | Error handling                   | Table from §6 of this plan                                                                                                                                                                   | §6           |
+| 13  | Security/privacy & accessibility | Carry over SVG 2 boilerplate; assess 3D additions                                                                                                                                            | —            |
+| A   | Attribute/index appendices       | Full attribute table, mapping each new attribute to the SVG 2 element/attribute it mirrors                                                                                                   | §4           |
+| B   | Changes since SVG 2              | Standard changes appendix                                                                                                                                                                    | —            |
 
 ### 7.1 Drafting order
 
@@ -337,7 +338,7 @@ modules.
   on `svg` is a plain XML attribute — explicitly not a presentation property;
   no CSS integration.
 - **OQ-6** — **RESOLVED** (spec §3.1, decision D-4): markers (and text-on-path,
-  stroking, gradient positioning) act on the *projected* outline
+  stroking, gradient positioning) act on the _projected_ outline
   ("project-early"); no 3D marker orientation exists in this specification.
 - **OQ-7** — **RESOLVED** (spec §3.2): shapes are 3D geometry; projected
   outlines are exact conics (ellipse-flattening within one device pixel
@@ -352,7 +353,7 @@ modules.
   `path3d` documents render without partial-geometry artifacts; documents with
   a `camera` element render identically to the same document without it (G2 →
   default orthographic camera); §2.1 misuse
-  cases (`d="M 1,2,3"`, `points` with triples) documented as *invalid* with the
+  cases (`d="M 1,2,3"`, `points` with triples) documented as _invalid_ with the
   spec-cited 2D outcome.
 - **3D tests**: reference renderer prototype (projection + painter's algorithm)
   with golden images per chapter example.
@@ -363,14 +364,14 @@ modules.
 
 ### 7.4 Milestones
 
-| Milestone | Exit criteria |
-|-----------|---------------|
-| M1 — Plan approved | This document accepted; naming conventions frozen |
-| M2 — Decisions frozen | OQ-1, OQ-2/3, OQ-5 resolved and recorded |
-| M3 — Core draft | Chapters 3–7 complete with examples |
-| M4 — Full draft | All chapters + appendices complete |
-| M5 — Test suite | Compat + 3D test suites passing on reference renderer |
-| M6 — First public draft | Spec + tests published together |
+| Milestone               | Exit criteria                                         |
+| ----------------------- | ----------------------------------------------------- |
+| M1 — Plan approved      | This document accepted; naming conventions frozen     |
+| M2 — Decisions frozen   | OQ-1, OQ-2/3, OQ-5 resolved and recorded              |
+| M3 — Core draft         | Chapters 3–7 complete with examples                   |
+| M4 — Full draft         | All chapters + appendices complete                    |
+| M5 — Test suite         | Compat + 3D test suites passing on reference renderer |
+| M6 — First public draft | Spec + tests published together                       |
 
 ---
 
