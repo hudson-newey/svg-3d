@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>&lt;svg3d-viewer&gt; — Vite demo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 32px;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+        background: #14141b;
+        color: #e2e8f0;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      p.lede {
+        margin: 0 0 24px;
+        color: #94a3b8;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 20px;
+      }
+      figure {
+        margin: 0;
+        background: #1e1e29;
+        border: 1px solid #2d2d3d;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      svg3d-viewer {
+        display: block;
+        height: 280px;
+      }
+      figcaption {
+        padding: 10px 14px;
+        font-size: 12px;
+        color: #94a3b8;
+        border-top: 1px solid #2d2d3d;
+      }
+    </style>
+    <script type="module" src="/src/svg3d-viewer.ts"></script>
+  </head>
+  <body>
+    <h1>&lt;svg3d-viewer&gt;</h1>
+    <p class="lede">
+      Reference viewer for the SVG 3D Level 1 draft — served by Vite. The component projects the
+      markup through the active &lt;camera&gt; and paints plain SVG 2 output.
+    </p>
+    <div class="grid">
+      <figure>
+        <svg3d-viewer
+          markup="<svg xmlns='http://www.w3.org/2000/svg' viewBox='-80 -80 160 160'><camera projection='orthographic' position='160 140 180' target='50 50 50' up='0 1 0'/><g stroke='#718096' stroke-width='1.5'><line x1='0' y1='0' z1='0' x2='100' y2='0' z2='0'/><line x1='0' y1='0' z1='0' x2='0' y2='100' z2='0'/><line x1='0' y1='0' z1='0' x2='0' y2='0' z2='100'/><line x1='100' y1='100' z1='100' x2='0' y2='100' z2='100'/><line x1='100' y1='100' z1='100' x2='100' y2='0' z2='100'/><line x1='100' y1='100' z1='100' x2='100' y2='100' z2='0'/><line x1='100' y1='0' z1='0' x2='100' y2='100' z2='0'/><line x1='100' y1='0' z1='0' x2='100' y2='0' z2='100'/><line x1='0' y1='100' z1='0' x2='100' y2='100' z2='0'/><line x1='0' y1='100' z1='0' x2='0' y2='100' z2='100'/><line x1='0' y1='0' z1='100' x2='100' y2='0' z2='100'/><line x1='0' y1='0' z1='100' x2='0' y2='100' z2='100'/></g><circle cx='50' cy='50' r='6' cz='50' fill='#e53e3e'/></svg>"
+        ></svg3d-viewer>
+        <figcaption>Wireframe box — line z1/z2, oblique orthographic camera</figcaption>
+      </figure>
+      <figure>
+        <svg3d-viewer
+          markup="<svg xmlns='http://www.w3.org/2000/svg' viewBox='-80 -80 160 160'><camera projection='perspective' fov='50' position='220 180 280' target='50 50 50' up='0 1 0' near='1'/><g stroke='#718096' stroke-width='1.5'><line x1='0' y1='0' z1='0' x2='100' y2='0' z2='0'/><line x1='0' y1='100' z1='0' x2='100' y2='100' z2='0'/><line x1='0' y1='0' z1='100' x2='100' y2='0' z2='100'/><line x1='0' y1='100' z1='100' x2='100' y2='100' z2='100'/><line x1='0' y1='0' z1='0' x2='0' y2='100' z2='0'/><line x1='100' y1='0' z1='0' x2='100' y2='100' z2='0'/><line x1='0' y1='0' z1='100' x2='0' y2='100' z2='100'/><line x1='100' y1='0' z1='100' x2='100' y2='100' z2='100'/><line x1='0' y1='0' z1='0' x2='0' y2='0' z2='100'/><line x1='100' y1='0' z1='0' x2='100' y2='0' z2='100'/><line x1='0' y1='100' z1='0' x2='0' y2='100' z2='100'/><line x1='100' y1='100' z1='0' x2='100' y2='100' z2='100'/></g></svg>"
+        ></svg3d-viewer>
+        <figcaption>Same box — perspective camera (fov 50)</figcaption>
+      </figure>
+      <figure>
+        <svg3d-viewer
+          markup="<svg xmlns='http://www.w3.org/2000/svg' viewBox='-120 -120 240 240'><camera projection='orthographic' position='260 180 260' target='100 100 40' up='0 1 0'/><path3d fill='none' stroke='#3182ce' stroke-width='3' d='M 20,180,0 C 60,40,90 120,40,90 180,160,0 S 60,20,-60 20,20,-40'/><path3d fill='#bee3f8' fill-opacity='0.6' stroke='#2b6cb0' stroke-width='2' d='M 30,60,40 A 40,40,0 1,1 150,120,-30 Z'/></svg>"
+        ></svg3d-viewer>
+        <figcaption>path3d — cubic triples and arcs (§7)</figcaption>
+      </figure>
+      <figure>
+        <svg3d-viewer
+          markup="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 180'><g stroke='#2d3748' fill='#bee3f8' fill-opacity='0.7'><rect x='30' y='30' width='90' height='90' rx='14' transform='rotateX(60)'/><rect x='150' y='30' width='90' height='90' rx='14' transform='rotateY(55)'/><circle cx='75' cy='145' r='38' transform='rotateX(65)'/></g></svg>"
+        ></svg3d-viewer>
+        <figcaption>3D transforms on 2D shapes (default identity camera)</figcaption>
+      </figure>
+    </div>
+  </body>
+</html>

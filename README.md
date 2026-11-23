@@ -25,17 +25,27 @@ unmodified SVG 2 renderer.
 
 ```html
 <script type="module" src="./src/index.ts"></script>
-<svg3d-viewer style="width: 480px; height: 360px"
+<svg3d-viewer
+  style="width: 480px; height: 360px"
   .markup='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
     <camera projection="perspective" fov="50" position="220 180 280" target="50 50 50"/>
     <line x1="0" y1="0" z1="0" x2="100" y2="100" z2="100"/>
-  </svg>'>
+  </svg>'
+>
 </svg3d-viewer>
 ```
 
-Run `pnpm install && pnpm storybook` for interactive examples (shapes,
-`path3d` grammar, camera flythroughs, spec examples). `pnpm test` runs the
-Node smoke tests of the projection and path grammars.
+Toolchain (Vite):
+
+- `pnpm dev` — Vite dev server with a demo page (`index.html`) showing the
+  component against real SVG 3D documents.
+- `pnpm build` — Vite library build → `dist/svg-3d-viewer.js` (single ES
+  module, `lit` externalized; see `exports` in `package.json`).
+- `pnpm typecheck` — strict TypeScript check.
+- `pnpm storybook` — Storybook (itself on the Vite integration) with
+  interactive examples: shapes, `path3d` grammar, camera flythroughs, spec
+  examples.
+- `pnpm test` — Node smoke tests of the projection and path grammars.
 
 ## Repository layout
 
