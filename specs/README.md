@@ -26,6 +26,11 @@ Specification drafts for the SVG 3D extension.
 - **Project-early principle**: projection happens before the SVG 2 paint
   stage, so markers, text-on-path, stroking, and gradient positioning all act
   on projected 2D geometry and no SVG 2 rule downstream is redefined.
+- **Animation is SMIL-only** (spec §10): all existing SMIL machinery applies
+  unchanged; `animateTransform` gains 3D types; `path3d` `d` interpolates
+  under the identical-command-structure rule; `animateMotion` over 3D
+  geometry translates in 3D; camera attributes animate. CSS animations and
+  transitions are out of scope.
 
 ## Status
 

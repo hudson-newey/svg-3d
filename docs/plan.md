@@ -371,3 +371,20 @@ modules.
 | M4 — Full draft | All chapters + appendices complete |
 | M5 — Test suite | Compat + 3D test suites passing on reference renderer |
 | M6 — First public draft | Spec + tests published together |
+
+---
+
+## 8. Post-plan addendum
+
+Decisions made after this plan was written, recorded in the spec's decision
+log (Appendix B of `specs/svg-3d-level-1.md`):
+
+- **D-9**: all planning open issues resolved and frozen (see the OQ list
+  above).
+- **D-10**: an Animation chapter was added (spec §10). SMIL Animation is the
+  sole animation mechanism, so all existing SMIL animation machinery applies
+  unchanged in 3D; `animateTransform` gains `translate3d`, `scale3d`,
+  `rotateX/Y/Z`, `rotate3d`; `path3d` `d` values interpolate under the
+  identical-command-structure rule; `animateMotion` over 3D geometry
+  translates in 3D; camera attributes animate. CSS animations, transitions,
+  and WAAPI are out of scope.

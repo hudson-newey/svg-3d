@@ -46,10 +46,11 @@ standing in the W3C process.
 7. [The `path3d` element](#7-the-path3d-element)
 8. [Point-list shapes: the `zs` attribute](#8-point-list-shapes-the-zs-attribute)
 9. [Paint servers](#9-paint-servers)
-10. [Filters](#10-filters)
-11. [Fallback and extensibility](#11-fallback-and-extensibility)
-12. [Error handling](#12-error-handling)
-13. [Security, privacy, and accessibility](#13-security-privacy-and-accessibility)
+10. [Animation](#10-animation)
+11. [Filters](#11-filters)
+12. [Fallback and extensibility](#12-fallback-and-extensibility)
+13. [Error handling](#13-error-handling)
+14. [Security, privacy, and accessibility](#14-security-privacy-and-accessibility)
 - [Appendix A: Attribute and element summary](#appendix-a-attribute-and-element-summary)
 - [Appendix B: Changes since SVG 2, and decision log](#appendix-b-changes-since-svg-2-and-decision-log)
 
@@ -100,7 +101,7 @@ where it is applied; they are restated here for convenience.
    renders identically.
 2. A 2D renderer (an SVG 2 renderer that implements nothing from this
    document) renders an SVG 3D document as its correct flat projection, per
-   the degradation rules in [§11](#11-fallback-and-extensibility).
+   the degradation rules in [§12](#12-fallback-and-extensibility).
 3. The 2D paint model is reused unchanged after the projection stage.
 
 ### 1.4 Non-goals
@@ -111,6 +112,8 @@ where it is applied; they are restated here for convenience.
   are unaffected.)
 - New DOM/IDL bindings. The vocabulary here is declarative and complete;
   scripting surfaces are deferred to a future module.
+- CSS integration. No CSS properties, animations, transitions, or keyframes
+  are defined by this specification; animation is SMIL-only (§10).
 - Supporting renderers that do not conform to SVG 2. Where this document says
   "per SVG 2", non-compliant parsers are out of scope by design.
 
@@ -143,16 +146,18 @@ interpreted as described in [RFC 2119].
   functions)
 - [FILTER-EFFECTS-1] **Filter Effects Module Level 1**,
   <https://www.w3.org/TR/filter-effects-1/>
+- [SMIL] **SMIL Animation**, W3C Recommendation,
+  <https://www.w3.org/TR/smil-animation/>
 - [RFC2119] **Key words for use in RFCs**, <https://www.rfc-editor.org/rfc/rfc2119>
 
 ### 2.2 Conformance classes
 
 - **SVG 3D 2D-conformant renderer**: conformant to [SVG2]; no further
   requirements. Such a renderer automatically satisfies every degradation
-  requirement in this specification, because the degradation rules (§11) are
+  requirement in this specification, because the degradation rules (§12) are
   exactly SVG 2's own rules for unknown attributes and unknown elements.
 - **SVG 3D 3D-conformant renderer**: conformant to [SVG2] and to all
-  normative requirements in §3–§10 of this specification.
+  normative requirements in §3–§11 of this specification.
 
 **Authoring conformance**: a conformant SVG 3D document is a conformant SVG 2
 document that additionally uses only the elements and attributes defined in
@@ -199,7 +204,7 @@ geometry had been authored directly. Consequences, all normative:
 - `animateMotion` moves along the *projected* outline when its `mpath`
   references 3D geometry (a `path3d`, or any shape with `z` geometry). The
   `animateMotion` `path` attribute itself remains the SVG 2 2D grammar (R3)
-  and is never extended.
+  and is never extended. See §10.5.
 - Gradient positioning follows §9.
 
 A 2D renderer performs none of steps 2–3; it renders geometry as authored,
@@ -315,7 +320,7 @@ in this order of precedence:
 3. Otherwise, the default camera (§5.5) is active.
 
 An unresolvable or invalid URL reference is an error at the `camera`
-attribute; the resolution falls through to rule 2, then 3 (see §12).
+attribute; the resolution falls through to rule 2, then 3 (see §13).
 
 The `camera` attribute is a plain XML attribute. It is **not** a presentation
 property: it cannot be set or cascaded through style sheets, and no `camera`
@@ -383,7 +388,7 @@ its view-space size, and geometry farther away is proportionally smaller. The
 `perspective = D` (in user units).
 
 **Validity.** If the camera basis is degenerate — `p = t`, `u` parallel to
-`z_cam`, or a zero-length `u` — the projection is undefined; per §12, the
+`z_cam`, or a zero-length `u` — the projection is undefined; per §13, the
 default camera is used instead. If `d ≤ 0` for a point, that point is behind
 the camera and is not rendered (§5.6).
 
@@ -421,7 +426,7 @@ no depth clipping.
 This section adds geometry attributes to existing elements. Each new attribute
 is a **geometry property** in the sense of SVG 2 (a CSS property with a
 presentation attribute), with initial value `0`, unitless user units, and
-`Animatable: yes`. Invalid values fall back to the initial value (§12); the
+`Animatable: yes`. Invalid values fall back to the initial value (§13); the
 element still renders.
 
 A 2D renderer ignores all of these attributes (R1) and renders the element as
@@ -559,7 +564,7 @@ one 3D moveto plus one 3D implicit lineto *or* three 2D points — no parser can
 decide. Since `path3d` is a new element with no legacy grammar to preserve
 (R3 applies to `path`, not to new elements), triples are mandatory. A 2D
 `d` value can be converted mechanically by appending `,0` to each coordinate
-pair; see the fallback idiom in §11.2.
+pair; see the fallback idiom in §12.2.
 
 **Relative commands.** For relative commands (`m`, `l`, `c`, `s`, `q`, `t`,
 `a`), the third coordinate of each triple is a **relative `z` delta**: it is
@@ -592,7 +597,7 @@ points with equal `z` is planar in the plane `z = const`.
 ### 7.3 Degradation
 
 A 2D renderer does not recognize `path3d`; per R2 it is excluded from
-rendering entirely — no partial geometry, no error. §11.2 defines the author
+rendering entirely — no partial geometry, no error. §12.2 defines the author
 fallback idiom.
 
 ### 7.4 Error handling
@@ -690,7 +695,101 @@ projection pipeline. The tile has no depth attribute of its own:
 
 ---
 
-## 10. Filters
+## 10. Animation
+
+### 10.1 Mechanism and scope
+
+The animation mechanism of this specification is **SMIL Animation** [SMIL],
+exactly as in SVG 2. The animation elements — `animate`, `set`,
+`animateTransform`, `animateMotion`, and `discard` — apply to SVG 3D
+documents with the semantics of SVG 2 and [SMIL], extended by this section.
+
+- CSS animations, CSS transitions, and the Web Animations API are **out of
+  scope** (§1.4): no CSS keyframe, transition, or animation syntax is defined
+  for any attribute or element introduced by this specification.
+- Every attribute introduced by this specification and marked `Animatable:
+  yes` (§5.1, §6, §8, §9, §11) is animatable with SMIL `animate`.
+- `calcMode`, `keyTimes`, `keySplines`, `values`, `begin`/`dur`/`repeat`, and
+  all other SMIL timing machinery are inherited from [SMIL] unchanged.
+- **Degradation**: a 2D renderer implements none of this section. SMIL
+  animations targeting unknown attributes have no effect per [SMIL], so the
+  2D behavior remains exactly SVG 2 behavior.
+
+### 10.2 Value types and interpolation
+
+| Attribute(s) | Value type | Interpolation |
+|--------------|-----------|----------------|
+| `z`, `z1`, `z2`, `cz`, `fz`, `dz` (feOffset), `fov`, `near`, `far` | `<number>` | Linear, per SMIL `<number>` |
+| `zs`, text/tspan `z`, text/tspan `dz` | `<number-list>` | Per-entry linear |
+| `position`, `target`, `up` | 3 numbers | Per-component linear |
+| `projection` | keyword | Discrete only |
+| `d` (on `path3d`) | path data | Per §10.4 |
+
+- `additive="sum"` on a number-valued attribute adds the animated value to
+  the underlying value (a `z` delta), as [SMIL] defines for numbers.
+- List-valued animation requires `from`/`to` (and every `values` entry) to
+  have the same number of entries; with mismatched counts there is no smooth
+  interpolation and the discrete fallback of [SMIL] applies, as it does for
+  SVG 2's `x`/`y` lists.
+- All animated values are unitless user units, as elsewhere in this
+  specification.
+
+### 10.3 `animateTransform`
+
+`animateTransform` gains the following values for its `type` attribute, in
+addition to the SVG 2 2D types (`translate`, `scale`, `rotate`, `skewX`,
+`skewY` — all unchanged):
+
+| `type` | `from`/`to`/`by` value |
+|--------|------------------------|
+| `translate3d` | 3 numbers: `tx ty tz` |
+| `scale3d` | 3 numbers: `sx sy sz` |
+| `rotateX`, `rotateY`, `rotateZ` | 1 number: angle in degrees |
+| `rotate3d` | 4 numbers: `ax ay az angle` (axis + angle in degrees) |
+
+- Interpolation is per-component linear. For `rotate3d`, the angle
+  interpolates and the axis is fixed; if the normalized axes of `from` and
+  `to` differ, interpolation is discrete.
+- **Additive and accumulate semantics**: as in SVG 2, each animated transform
+  produces one transform function that is post-multiplied onto the element's
+  transform list — extended here to 4×4 matrices per [CSS-TRANSFORMS-1].
+- No `skew3d` is defined; `skewX`/`skewY` remain 2D.
+
+### 10.4 Animating `d` on `path3d`
+
+Two `d` values of a `path3d` interpolate smoothly if and only if they have
+the **identical command structure**: the same command letters in the same
+order with the same repetition counts — mirroring SVG 2's rule for `d`
+interpolation. Interpolating triples interpolate `x`, `y`, and `z`
+independently per component; `H`, `V`, and `Z` values interpolate as in
+SVG 2. Otherwise there is no smooth interpolation, and the discrete fallback
+of [SMIL] applies.
+
+### 10.5 Motion animation
+
+- `animateMotion` with an `mpath` referencing a `path3d` (or any element with
+  3D geometry) translates the target element along that geometry in **3D**:
+  the implied translation is the 3D point at the given distance along the
+  referenced geometry, in the coordinate system of the animated element, so
+  the motion includes `z`.
+- `rotate="auto"` uses the tangent of the *projected* outline (§3.1,
+  project-early principle).
+- The `animateMotion` `path` attribute remains the SVG 2 2D grammar (R3) and
+  is never extended.
+
+### 10.6 Camera animation
+
+- The `camera` attributes `position`, `target`, `up`, `fov`, `near`, and
+  `far` are animatable (§5.1); animating them produces camera motion
+  (flythrough, dolly, zoom). `projection` is discrete-only.
+- The `camera` attribute on `svg` selects a camera by URL and is **not**
+  animatable (§5.2).
+- On a 2D renderer, animated `camera` elements are ignored (R2); the default
+  camera applies throughout the animation.
+
+---
+
+## 11. Filters
 
 - `feOffset` gains a `dz` attribute (initial `0`, animatable): the offset is
   `(dx, dy, dz)` applied to the filter primitive subregion in the filter's
@@ -705,9 +804,9 @@ projection pipeline. The tile has no depth attribute of its own:
 
 ---
 
-## 11. Fallback and extensibility
+## 12. Fallback and extensibility
 
-### 11.1 Degradation summary (normative)
+### 12.1 Degradation summary (normative)
 
 | Feature | 2D renderer behavior | Normative basis |
 |---------|----------------------|-----------------|
@@ -718,7 +817,7 @@ projection pipeline. The tile has no depth attribute of its own:
 | `camera` attribute on `svg` | Ignored | R1 |
 | 3D transform functions | Already valid in SVG 2; z effect invisible in 2D rendering | R4 |
 
-### 11.2 Author fallback for `path3d`
+### 12.2 Author fallback for `path3d`
 
 Because `path3d` renders nothing on a 2D renderer, authors who need flat
 fallback **MUST** use the conditional-processing idiom:
@@ -748,7 +847,7 @@ the defined behavior.
 
 ---
 
-## 12. Error handling
+## 13. Error handling
 
 This specification follows SVG 2's error philosophy: render what is
 deterministically recoverable, and degrade to the SVG 2 interpretation.
@@ -758,7 +857,8 @@ deterministically recoverable, and degrade to the SVG 2 interpretation.
 | Invalid value for `z`, `z1`, `z2`, `cz`, `fz`, `dz`, `zs` entry | Use the initial value (`0` / empty list); element renders |
 | `zs` count mismatch | §8.1 alignment rules |
 | `path3d` path data error | SVG 2 §9.5.4 model with §7.2 parameter counts |
-| `path3d` on a 2D renderer | Not rendered (R2); §11.2 fallback applies |
+| `path3d` on a 2D renderer | Not rendered (R2); §12.2 fallback applies |
+| Animation `from`/`to`/`values` with mismatched list or command counts | No smooth interpolation; discrete fallback per [SMIL] (§10.2, §10.4) |
 | Invalid `camera` attribute value (e.g. a malformed number in `position`) | Use that attribute's initial value |
 | `camera` URL reference unresolvable | Fall through the §5.2 resolution order |
 | Degenerate camera (§5.4 validity) | Use the default camera for that viewport |
@@ -771,7 +871,7 @@ behavior.
 
 ---
 
-## 13. Security, privacy, and accessibility
+## 14. Security, privacy, and accessibility
 
 - **Security/privacy.** The projection mathematics are local computations on
   document-supplied numbers; no new network, timing, or device-access surface
@@ -836,7 +936,7 @@ behavior.
 6. **D-6 — No new namespace** (§2.3): SVG 2's extension channels
    (§5.10) suffice.
 7. **D-7 — No DOM/IDL in this version** (§1.4).
-8. Everything else: new geometry attributes per §6, §9, §10 and Appendix A.
+8. Everything else: new geometry attributes per §6, §9, §10, §11 and Appendix A.
 9. **D-9 — All planning open issues resolved (v1 freeze).** The remaining
    decisions were fixed as follows, each chosen for simplicity and strict
    SVG 2 compatibility:
@@ -848,7 +948,13 @@ behavior.
    | Volumetric `rect` | Out of scope; planar only — use two `rect`s or `path3d` (§6.2) |
    | Glyph orientation | Glyphs never rotate toward the camera (§6.6) |
    | `pattern` depth | No depth attribute; `patternTransform` is the only `z` placement (§9.4) |
-   | Extension identifier | Frozen as `urn:svg3d:1.0` (§11.2) |
+   | Extension identifier | Frozen as `urn:svg3d:1.0` (§12.2) |
    | `camera` on `svg` | Plain XML attribute; explicitly not a presentation property; no CSS integration (§5.2) |
    | Marker/text-on-path in 3D | Operate on projected outlines, definitively (§3.1) |
-   | `animateMotion` | Moves along projected outlines via `mpath`; its `path` attribute stays 2D (R3) (§3.1) |
+   | `animateMotion` | Moves along projected outlines via `mpath`; its `path` attribute stays 2D (R3) (§3.1, §10.5) |
+10. **D-10 — Animation is SMIL-only, in 3D** (§10). SMIL Animation is the sole
+   animation mechanism; CSS animations/transitions/WAAPI are out of scope.
+   `animateTransform` gains `translate3d`, `scale3d`, `rotateX/Y/Z`,
+   `rotate3d`; `path3d` `d` animates under the identical-command-structure
+   rule; `animateMotion` over 3D geometry translates in 3D; camera attributes
+   animate (flythroughs).
