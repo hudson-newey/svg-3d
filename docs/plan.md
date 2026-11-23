@@ -27,6 +27,9 @@ identifies (a) what the spec will say, (b) which SVG 2 rules constrain it, and
   fills) beyond what projection needs. These can be future modules.
 - Supporting renderers that violate SVG 2's own error-handling rules. Where the
   plan says "per the spec", non-compliant parsers are out of scope by design.
+- DOM/IDL bindings: this module defines **no new DOM interfaces**. The 3D
+  vocabulary is declarative and complete without IDL; scripting surfaces are
+  deferred to a future module.
 
 ---
 
@@ -41,7 +44,7 @@ These passages decide every compatibility question below. Cite them in the spec.
 | G3 | §9.5.4 *Error handling in path data*: the user agent "shall render a 'path' element up to (but not including) the path command containing the first error"; a command with a wrong parameter count "is rendered up to and including the last correctly defined path segment". The spec's own example is `M 10,10 L 20,20,30`. | **Path data must never be extended in place.** See §4.1. |
 | G4 | §9.3.1 (moveto): "If a moveto is followed by multiple pairs of coordinates, the subsequent pairs are treated as implicit lineto commands." | A third coordinate after `M x y` is *not ignored*: with an odd trailing number it is a parse error (G3 truncates); with an even count it is silently consumed as implicit lineto geometry. |
 | G5 | §10.3/§10.4 (`polyline`/`polygon` `points`, grammar `[ <number>+ ]#`): "If an odd number of coordinates is provided, then the element is in error … the user agent will drop the last, odd coordinate and otherwise render the shape." | **`points` must never carry interleaved `z` values.** `x y z x y z` reparses as pairs `(x,y),(z,x),(y,z)` — corrupted geometry with no error. |
-| G6 | SVG 2 defines `transform` as the CSS `transform` property; the DOM mapping is a 4×4 matrix (`DOMMatrix`, `matrix3d(…)` appears in the SVGTransform rules, §8 coordinate-systems chapter). | **3D transform functions (`translate3d`, `rotate3d`, `matrix3d`, `perspective`, …) are already valid** on `transform`, `gradientTransform`, `patternTransform` for any SVG 2-compliant renderer. No new transform grammar is needed; only 3D rendering semantics are. |
+| G6 | SVG 2 defines `transform` as the CSS `transform` property (4×4 homogeneous matrices per CSS Transforms, referenced from the SVG 2 coordinate-systems chapter). | **3D transform functions (`translate3d`, `rotate3d`, `matrix3d`, `perspective`, …) are already valid** on `transform`, `gradientTransform`, `patternTransform` for any SVG 2-compliant renderer. No new transform grammar is needed. Transforms are used for **geometry placement only** — the camera is a separate viewport concept (§4.2.3), never expressed with `transform`. |
 | G7 | Precedent: `fePointLight` and `feSpotLight` (Filter Effects 1) already define `x`, `y`, `z`, `pointsAtX/Y/Z`; `feDistantLight` defines an `azimuth`/`elevation` direction in 3D. | There is in-spec precedent for adding `z` as a plain attribute. Follow the same pattern and cite it. |
 | G8 | SVG 2 geometry attributes on shapes (`x`, `y`, `cx`, `cy`, …) are **geometry properties** (CSS properties with presentation-attribute syntax). | New `z`-attributes should be geometry properties too: initial value `0`, invalid values fall back to the initial value rather than disabling rendering. |
 
@@ -78,7 +81,7 @@ mechanism each element uses, and the degradation column is normative.
 | Mechanism | How a 2D SVG 2 renderer behaves | Use for |
 |-----------|--------------------------------|---------|
 | **M-A: new attribute** on an existing element | Renders the existing 2D shape (`z` ignored, G1) | Elements whose 2D grammar lives in *attributes*, not *values* |
-| **M-B: new element** | Renders nothing (G2); optional flat fallback via `switch`/`requiredExtensions` | Elements whose geometry lives in *value grammars* that cannot be split (`path`) |
+| **M-B: new element** | Renders nothing (G2); optional flat fallback via `switch`/`requiredExtensions` | Elements whose geometry lives in *value grammars* that cannot be split (`path`), and the viewport `camera` |
 | **M-C: already-3D channel** (CSS Transforms / filter lighting) | Renders the 2D projection it already implements | `transform`, gradient/pattern transforms, lighting filters |
 
 Fallback elements that *do* render flat in 2D (M-A) are preferred over elements
@@ -167,18 +170,52 @@ G5 forbids interleaving. Two viable designs (OQ-2):
 Recommendation: Option 1. Reserve `polygon3d`/`polyline3d` as *aliases* only if
 drafting reveals alignment problems.
 
-#### 4.2.3 `viewBox` / `preserveAspectRatio`
+#### 4.2.3 Camera & viewport — new `camera` element (mechanism M-B); `viewBox` unchanged
 
-`viewBox` stays 2D — it describes the projection *plane*. The camera/projection
-model (OQ-5) is new vocabulary, e.g. presentation properties:
+`viewBox` keeps its exact SVG 2 meaning: it describes the 2D projection *plane*
+— the film onto which 3D geometry is projected — and `preserveAspectRatio`
+continues to control the projected-image-to-viewport mapping.
 
-- `projection: orthographic | perspective`
-- camera position/aim (or reuse CSS `perspective` + `perspective-origin` where
-  the semantics match)
+The camera itself is **not** expressed with `transform`. G6 makes `transform` a
+per-element geometry operation; using it as a camera would (a) make the
+projection depend on per-element state, (b) be invisible to a 2D renderer that
+flattens z anyway, and (c) conflate two independent concerns. Instead, the
+**viewport gains a 3D camera** as new vocabulary on the element that
+establishes the viewport (`svg`):
 
-Constraint inherited from G6: transforms already move geometry in 3D, so the
-projection stage must operate on the post-transform geometry. Define ordering
-precisely (transform → project → SVG 2 paint model).
+```xml
+<svg viewBox="0 0 100 100">
+  <camera projection="perspective" fov="60"
+          position="50 40 200" target="50 40 0" up="0 1 0"
+          near="1" far="1000"/>
+  <!-- 3D content -->
+</svg>
+```
+
+Design points for the spec (OQ-5):
+
+- The **active camera** of a viewport is its first `camera` child element. A
+  `camera` presentation property on `svg` (`camera="url(#cam)"`) is the reuse
+  hook for cameras defined in `defs` and shared across viewports.
+- Attribute set (baseline): `projection` (`orthographic | perspective`),
+  `position`, `target`, `up`, `fov`, `near`, `far`, plus orthographic extents.
+  The camera "behaves like a 3D viewport": the `viewBox` is mapped onto the
+  camera's film/projection plane, so all existing viewport sizing and
+  `preserveAspectRatio` logic is reused unchanged.
+- **Default camera (compat guarantee):** a viewport with no `camera` uses an
+  orthographic camera looking along −z with exactly the mapping SVG 2 uses
+  today. Every existing document renders pixel-identically, with or without a
+  `camera` element present in a 2D renderer.
+- Scoping: each `svg` element establishes a viewport and therefore a camera
+  scope, exactly as nested viewports work in SVG 2 today.
+- Rendering-pipeline ordering becomes: geometry transforms (including 3D CSS
+  transform functions, M-C) → camera view transform → projection → `viewBox`
+  mapping → SVG 2 paint model. The projection stage always operates on
+  post-transform geometry.
+- Degradation: `camera` is an unknown element to a 2D renderer (G2) — it is
+  skipped and the default orthographic camera applies, which ignores `z` in
+  projection and yields the flat rendering. Ideal M-B fallback: nothing to
+  hide.
 
 #### 4.2.4 Things deliberately left 2D in the first version
 
@@ -200,8 +237,6 @@ testable:
   already valid CSS `transform` values (G6). The spec adds only *rendering
   semantics* (how a 4×4-transformed plane projects) and conformance wording.
 - `fePointLight`, `feSpotLight`, `feDistantLight`: already carry `z` (G7).
-- `DOMPoint`/`DOMMatrix` (WebIDL used by SVG 2 DOM) already have `z`/4×4 — the
-  DOM chapter inherits 3D-capable primitives for free.
 
 ---
 
@@ -228,6 +263,9 @@ each mechanism, and the author-facing fallback idioms:
    The spec must register the extension URI, define `requiredExtensions`
    evaluation for SVG-3D support, and state that `switch` child selection is
    unaffected by unknown-element handling (G2).
+3. **Camera**: a `camera` element is unknown to a 2D renderer (G2) and is
+   skipped; the viewport then uses the default orthographic camera (§4.2.3),
+   which reproduces SVG 2's flat rendering exactly. No author action required.
 
 ---
 
@@ -241,24 +279,12 @@ Mirror SVG 2's error philosophy (render-what-you-can, deterministic fallback):
 | `zs`-list length ≠ vertex count | Missing `z` → `0`; extra values ignored |
 | `path3d` data errors | Same model as SVG 2 §9.5.4: render up to the last well-defined segment, with 3D coordinates |
 | `path3d` unsupported by renderer | G2: not rendered; §5 fallback applies |
+| Invalid `camera` attribute value | Ignore the invalid value; use that attribute's initial value; degenerate camera geometry (e.g. zero-length `up`, `position` = `target`) → use the default camera |
 | Zero-width/zero-height + `z` interactions | Reuse SVG 2 rules unchanged (they are z-independent) |
 
 ---
 
-## 7. DOM additions
-
-- `SVGLineElement`: `z1`, `z2` IDL attributes (reflecting geometry properties).
-- `SVGRectElement`: `z`; `SVGGeometryElement`-shared `z` where appropriate.
-- `SVGPath3DElement` (new): mirrors `SVGPathElement`; `getTotalLength()`,
-  `getPointAtLength()` return 3D points (`DOMPoint`, which already has `z`).
-- `SVGPolylineElement`/`SVGPolygonElement`: `zs` list reflection
-  (`SVGNumberList`), plus `getPointAtLength` in 3D where supported.
-- State the rule: all 2D DOM interfaces keep their exact SVG 2 behavior when
-  the element is viewed in 2D (projection), so existing scripts are unaffected.
-
----
-
-## 8. Specification document outline (the writing plan)
+## 7. Specification document outline (the writing plan)
 
 The spec will be authored as a standalone module ("SVG 3D Level 1") that
 patches SVG 2 by reference, following the structure conventions of W3C SVG
@@ -268,31 +294,30 @@ modules.
 |---|---------|---------|-----------|
 | 1 | Introduction | Goals, scope, non-goals (§1 above) | §1 |
 | 2 | Conformance | SVG 2 dependency, 2D-conformance profile = SVG 2 + nothing; 3D-conformance profile | §2, §5 |
-| 3 | Rendering model | 2D paint model unchanged; add projection stage; camera & `projection` property; painter's-algorithm z-ordering definition | §4.2.3, OQ-5 |
-| 4 | Coordinate systems | 3D user space; relationship to CSS Transforms 4×4 matrices (G6); transform ordering | §4.3 |
+| 3 | Rendering model | 2D paint model unchanged; add projection stage; `camera` element, `camera` property, and default camera (orthographic, SVG 2-identical); painter's-algorithm z-ordering definition | §4.2.3, OQ-5 |
+| 4 | Coordinate systems | 3D user space; relationship to CSS Transforms 4×4 matrices (G6); transform ordering; explicit rule that transforms never define the camera | §4.3 |
 | 5 | Basic shapes | All Category A attribute tables (§4.1), each with: syntax, geometry-property status, 2D degradation, examples | §4.1 |
 | 6 | `path3d` | New element + grammar (OQ-1 decision), error handling, fallback idiom | §4.2.1, §5 |
 | 7 | Point-list shapes | `zs` parallel attribute (OQ-2/OQ-3), alignment rules, error handling | §4.2.2 |
 | 8 | Paint servers | Gradient `z` attributes; gradient units in 3D | §4.1 |
 | 9 | Text | `z`/`dz` lists; explicit deferrals (textPath 3D) | §4.1, §4.2.4 |
 | 10 | Filters | Lighting = already 3D (G7); `feOffset.dz`; everything else stays 2D | §4.1, §4.2.4 |
-| 11 | Fallback & extensibility | `switch`/`requiredExtensions` idiom; registered extension URI; unknown-element rules restated | §5 |
+| 11 | Fallback & extensibility | `switch`/`requiredExtensions` idiom; registered extension URI; unknown-element rules restated (incl. `camera` default-camera fallback) | §5 |
 | 12 | Error handling | Table from §6 of this plan | §6 |
-| 13 | DOM interfaces | §7 of this plan | §7 |
-| 14 | Security/privacy & accessibility | Carry over SVG 2 boilerplate; assess 3D additions | — |
+| 13 | Security/privacy & accessibility | Carry over SVG 2 boilerplate; assess 3D additions | — |
 | A | Attribute/index appendices | Full attribute table, mapping each new attribute to the SVG 2 element/attribute it mirrors | §4 |
 | B | Changes since SVG 2 | Standard changes appendix | — |
 
-### 8.1 Drafting order
+### 7.1 Drafting order
 
 1. **Freeze decisions**: OQ-1 (path3d grammar), OQ-2/OQ-3 (parallel attribute
-   name), naming conventions (§4.1), OQ-5 (camera model baseline).
+   name), naming conventions (§4.1), OQ-5 (camera element & default camera).
 2. **Chapters 3–5** (rendering model + shapes): they unblock everything else.
 3. **Chapters 6–7** (path3d, point lists): the grammatical core.
 4. **Chapters 8–13**: parallelizable, mostly referential.
 5. **Chapter 2 + Appendix A last** (they summarize the frozen result).
 
-### 8.2 Open questions to resolve while drafting
+### 7.2 Open questions to resolve while drafting
 
 - **OQ-1**: `path3d` grammar — mixed 2D/3D commands (recommended baseline) vs.
   triples-only vs. z-suffix commands.
@@ -300,9 +325,13 @@ modules.
   (`zs` vs `points-z` vs `points3d`), and whether to also allow it on `path3d`.
 - **OQ-4**: does `rect` gain a `depth` attribute (extruded box) or does a box
   become a new element? Default: planar rect only; volume is future work.
-- **OQ-5**: camera/projection vocabulary: own properties vs. reuse of CSS
-  `perspective`/`perspective-origin`. Default: orthographic baseline with
-  perspective as optional feature.
+- **OQ-5**: camera vocabulary details: full `<camera>` attribute set (baseline:
+  `projection`, `position`, `target`, `up`, `fov`, `near`, `far`), orthographic
+  extent model, active-camera selection rule (first `camera` child vs.
+  `camera="url(#id)"` property — default: first child, property as reuse hook),
+  camera scoping with nested `svg` viewports, and whether `fov` semantics
+  reference CSS `perspective`. Default: orthographic baseline reproducing SVG 2
+  exactly; perspective as defined extension.
 - **OQ-6**: 3D marker orientation (`orient="auto"` semantics on 3D tangents).
 - **OQ-7**: `circle`/`ellipse` on an oblique plane (tilted by transform) —
   confirm ellipse outline math under 4×4 transform + projection.
@@ -310,11 +339,13 @@ modules.
   attribute/element extension sufficient? Default: no namespace bump; SVG 2
   extension mechanism only.
 
-### 8.3 Validation & testing plan
+### 7.3 Validation & testing plan
 
 - **Compat tests (must all pass on an SVG 2 renderer)**: every Category A
   example renders identically with and without the `z` attributes present;
-  `path3d` documents render without partial-geometry artifacts; §2.1 misuse
+  `path3d` documents render without partial-geometry artifacts; documents with
+  a `camera` element render identically to the same document without it (G2 →
+  default orthographic camera); §2.1 misuse
   cases (`d="M 1,2,3"`, `points` with triples) documented as *invalid* with the
   spec-cited 2D outcome.
 - **3D tests**: reference renderer prototype (projection + painter's algorithm)
@@ -324,13 +355,13 @@ modules.
 - **Interop check**: run the SVG 2 test suite subset against the prototype to
   prove no regressions (the spec's core promise).
 
-### 8.4 Milestones
+### 7.4 Milestones
 
 | Milestone | Exit criteria |
 |-----------|---------------|
 | M1 — Plan approved | This document accepted; naming conventions frozen |
 | M2 — Decisions frozen | OQ-1, OQ-2/3, OQ-5 resolved and recorded |
 | M3 — Core draft | Chapters 3–7 complete with examples |
-| M4 — Full draft | All chapters + appendices; DOM chapter reviewed |
+| M4 — Full draft | All chapters + appendices complete |
 | M5 — Test suite | Compat + 3D test suites passing on reference renderer |
 | M6 — First public draft | Spec + tests published together |
