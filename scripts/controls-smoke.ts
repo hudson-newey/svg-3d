@@ -14,6 +14,7 @@ globalThis.SVGElement = win.SVGElement as unknown as typeof SVGElement;
 globalThis.Element = win.Element as unknown as typeof Element;
 globalThis.customElements = win.customElements as unknown as typeof CustomElementRegistry;
 globalThis.CSSStyleSheet = win.CSSStyleSheet as unknown as typeof CSSStyleSheet;
+globalThis.XMLSerializer = win.XMLSerializer as unknown as typeof XMLSerializer;
 
 // Node strip-types cannot execute decorators; pre-transform with esbuild
 // (it honors this repo's tsconfig, including experimentalDecorators).
@@ -116,6 +117,18 @@ check(
     .querySelector("path")!
     .getAttribute("d") === plainD0,
 );
+
+// Declarative usage: SVG source provided via the default slot.
+const slotted = document.createElement("svg3d-viewer") as HTMLElement;
+slotted.innerHTML =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+  '<line x1="10" y1="20" z1="0" x2="30" y2="40" z2="0" stroke="black"/></svg>';
+document.body.appendChild(slotted);
+await slotted.updateComplete;
+await new Promise((r) => setTimeout(r, 5)); // slotchange is async
+await slotted.updateComplete;
+const slotD = slotted.shadowRoot!.querySelector(".frame svg path")?.getAttribute("d");
+check("slot content projects", slotD === "M 10,20 L 30,40", slotD ?? "no path");
 
 console.log(
   failures === 0

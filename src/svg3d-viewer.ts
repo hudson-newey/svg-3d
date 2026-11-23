@@ -6,7 +6,10 @@ import { renderSvg3d, resolveCamera } from "./lib/render.ts";
 /**
  * `<svg3d-viewer>` — reference viewer for the SVG 3D Level 1 draft.
  *
- * Takes an SVG 3D document (markup string or `src` URL), applies the spec's
+ * Takes an SVG 3D document from three channels, in priority order:
+ * the `markup` property, the `src` URL property, or the **default slot**
+ * (either real `<svg>` children — serialized automatically — or SVG source
+ * text). It then applies the spec's
  * project-early pipeline (§3.1): model transforms → camera view → projection
  * → plain SVG 2 output that the browser paints directly.
  *
@@ -56,6 +59,7 @@ export class Svg3dViewer extends LitElement {
   @property({ state: true }) private error = "";
 
   #root: SVGSVGElement | null = null;
+  #slottedMarkup = "";
   #orbitAz = 0;
   #orbitEl = 0;
   #zoom = 1;
@@ -108,6 +112,7 @@ export class Svg3dViewer extends LitElement {
 
   protected render() {
     return html`
+      <slot hidden @slotchange=${this.#onSlotChange}></slot>
       <div class="frame" part="frame"></div>
       ${this.error ? html`<div class="error">${this.error}</div>` : nothing}
       ${
@@ -131,6 +136,27 @@ export class Svg3dViewer extends LitElement {
     super.disconnectedCallback();
   }
 
+  /**
+   * Read the default slot as SVG source: a real <svg> child is serialized
+   * with XMLSerializer (authors write live SVG markup declaratively);
+   * otherwise the slot's text is taken as raw SVG source. The `markup` and
+   * `src` properties take precedence over slot content.
+   */
+  #onSlotChange = (): void => {
+    if (this.markup.trim() || this.src) return;
+    const svg = this.querySelector("svg");
+    this.#slottedMarkup = svg
+      ? new XMLSerializer().serializeToString(svg)
+      : (this.textContent ?? "").trim();
+    if (this.isConnected) this.#project();
+  };
+
+  protected firstUpdated(): void {
+    // Covers declaratively-upgraded elements whose slot assignment fires
+    // before the component attaches its slotchange listener.
+    this.#onSlotChange();
+  }
+
   async #load(url: string): Promise<void> {
     try {
       const res = await fetch(url);
@@ -141,11 +167,16 @@ export class Svg3dViewer extends LitElement {
     }
   }
 
+  /** The active source: `markup` property first, then slot content. */
+  get #source(): string {
+    return this.markup.trim() ? this.markup : this.#slottedMarkup;
+  }
+
   #project(): void {
     this.error = "";
     const frame = this.renderRoot.querySelector(".frame");
-    if (!frame || !this.markup.trim()) return;
-    const doc = new DOMParser().parseFromString(this.markup, "image/svg+xml");
+    if (!frame || !this.#source.trim()) return;
+    const doc = new DOMParser().parseFromString(this.#source, "image/svg+xml");
     const root = doc.documentElement;
     if (doc.querySelector("parsererror") || !(root instanceof SVGSVGElement)) {
       this.error = "Invalid SVG markup";

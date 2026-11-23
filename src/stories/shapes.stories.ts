@@ -73,6 +73,20 @@ export const FlatCompat: Story = {
     </div>`,
 };
 
+export const SlotUsage: Story = {
+  name: "Declarative usage — SVG source via the default slot",
+  render: () => html`
+    <svg3d-viewer style="width:420px;height:340px">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150">
+        <rect x="10" y="10" width="80" height="60" z="0" fill="#9ae6b4" stroke="#276749" />
+        <circle cx="150" cy="40" r="25" cz="0" fill="#bee3f8" stroke="#2b6cb0" />
+        <line x1="10" y1="100" z1="0" x2="190" y2="130" z2="0" stroke="#4a5568" stroke-width="2" />
+        <polygon points="100,60 140,60 120,95" zs="0 0 0" fill="#fbd38d" stroke="#c05621" />
+      </svg>
+    </svg3d-viewer>
+  `,
+};
+
 export const WireframeBoxOrtho: Story = {
   name: "Wireframe box — line z1/z2, orthographic camera",
   render: () =>

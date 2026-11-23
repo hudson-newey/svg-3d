@@ -58,9 +58,18 @@ component can be loaded straight from the CDN — here, a basic rotating box:
   const C = [-40, 40];
   const corners = C.flatMap((x) => C.flatMap((y) => C.map((z) => [x, y, z])));
   const edges = [
-    [0, 1], [2, 3], [4, 5], [6, 7], // z edges
-    [0, 2], [1, 3], [4, 6], [5, 7], // y edges
-    [0, 4], [1, 5], [2, 6], [3, 7], // x edges
+    [0, 1],
+    [2, 3],
+    [4, 5],
+    [6, 7], // z edges
+    [0, 2],
+    [1, 3],
+    [4, 6],
+    [5, 7], // y edges
+    [0, 4],
+    [1, 5],
+    [2, 6],
+    [3, 7], // x edges
   ];
 
   let angle = 0;
@@ -68,7 +77,8 @@ component can be loaded straight from the CDN — here, a basic rotating box:
     angle = (angle + 1.2) % 360;
     const lines = edges
       .map(([a, b]) => {
-        const A = corners[a], B = corners[b];
+        const A = corners[a],
+          B = corners[b];
         return `<line x1="${A[0]}" y1="${A[1]}" z1="${A[2]}" x2="${B[0]}" y2="${B[1]}" z2="${B[2]}"/>`;
       })
       .join("");
@@ -109,6 +119,29 @@ Toolchain (Vite):
   interactive examples: shapes, `path3d` grammar, camera flythroughs, spec
   examples.
 - `pnpm test` — Node smoke tests of the projection and path grammars.
+
+### Providing the SVG source
+
+Three channels, in priority order (`markup` > `src` > slot):
+
+```html
+<!-- Declarative: real SVG children in the default slot (static documents) -->
+<svg3d-viewer style="width: 480px; height: 360px">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
+    <line x1="0" y1="0" z1="0" x2="100" y2="100" z2="100" />
+  </svg>
+</svg3d-viewer>
+
+<!-- Dynamic: markup property — rewrite it every frame (how the game story works) -->
+<svg3d-viewer .markup="${svgString}"></svg3d-viewer>
+
+<!-- Remote: fetch from a URL -->
+<svg3d-viewer src="https://example.com/scene.svg"></svg3d-viewer>
+```
+
+Slot children are serialized automatically (a real `<svg>` child is taken with
+`XMLSerializer`; text-only slot content is parsed as raw source). Slot content
+is intended for static documents — per-frame updates should use `markup`.
 
 Interactive controls: add the `controls` attribute to a viewer and it becomes
 focusable (click or Tab), with keyboard camera control — **←/→** orbit,
