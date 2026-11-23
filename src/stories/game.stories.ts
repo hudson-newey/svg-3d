@@ -1022,6 +1022,11 @@ export const NeonVectors3D: Story = {
       state = createInitialState(best);
       state.camMode = cam;
       state.phase = "playing";
+      fireHeld = false;
+      firePointer = null;
+      joystick = null;
+      joyPointer = null;
+      joyKnob.style.transform = "";
       overlay.style.display = "none";
       pauseBtn.textContent = "PAUSE";
       root.focus();
@@ -1127,6 +1132,7 @@ export const NeonVectors3D: Story = {
     let firePointer: number | null = null;
     fireBtn.addEventListener("pointerdown", (e) => {
       e.preventDefault();
+      if (state.phase !== "playing") return; // touch does nothing outside play
       if (firePointer !== null) return;
       firePointer = e.pointerId;
       fireBtn.setPointerCapture?.(e.pointerId);
@@ -1177,6 +1183,7 @@ export const NeonVectors3D: Story = {
     };
     joyEl.addEventListener("pointerdown", (e) => {
       e.preventDefault();
+      if (state.phase !== "playing") return; // touch does nothing outside play
       if (joyPointer !== null) return;
       joyPointer = e.pointerId;
       joyEl.setPointerCapture?.(e.pointerId);
