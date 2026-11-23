@@ -151,5 +151,32 @@ check(
   partial.querySelector("path")!.getAttribute("d")!.startsWith("M 1,2 L 4,5"),
 );
 
+// 9. SMIL passthrough (transform + paint animations, child-targeted only)
+const smil = project(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+     <g>
+       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite"/>
+       <rect x="10" y="10" width="30" height="20" fill="red">
+         <animate attributeName="fill-opacity" values="0.2;0.9;0.2" dur="3s" repeatCount="indefinite"/>
+       </rect>
+       <animate attributeName="opacity" values="1;0.5;1" dur="2s" href="#elsewhere"/>
+     </g>
+   </svg>`,
+);
+const outG = smil.querySelector("g");
+check(
+  "animateTransform passes through to mirrored g",
+  outG?.querySelector("animateTransform")?.getAttribute("type") === "rotate",
+);
+const outRect = smil.querySelector("path");
+check(
+  "paint animation passes through to projected shape",
+  outRect?.querySelector("animate")?.getAttribute("attributeName") === "fill-opacity",
+);
+check(
+  "href-targeted animations are not passed through",
+  smil.querySelector("animate[href]") === null && smil.querySelectorAll("animate").length === 1,
+);
+
 console.log(failures === 0 ? "\nAll DOM checks passed" : `\n${failures} DOM check(s) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

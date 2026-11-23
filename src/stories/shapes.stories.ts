@@ -94,6 +94,39 @@ export const SlotUsage: Story = {
   `,
 };
 
+export const SmilSpinner: Story = {
+  name: "SVG animations (SMIL) pass through the projection",
+  render: () =>
+    viewer(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -90 180 180">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="14s" repeatCount="indefinite"/>
+      <rect x="-52" y="-52" width="104" height="104" z="-30" fill="#3182ce" fill-opacity="0.4" stroke="#93c5fd">
+        <animate attributeName="fill-opacity" values="0.2;0.55;0.2" dur="3s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="-52" y="-52" width="104" height="104" z="30" fill="#f6ad55" fill-opacity="0.4" stroke="#fbd38d">
+        <animate attributeName="fill-opacity" values="0.55;0.2;0.55" dur="3s" repeatCount="indefinite"/>
+      </rect>
+      <g stroke="#cbd5e1" stroke-width="1.4">
+        <line x1="-52" y1="-52" z1="-30" x2="52" y2="-52" z2="-30"/>
+        <line x1="52" y1="-52" z1="-30" x2="52" y2="52" z2="-30"/>
+        <line x1="52" y1="52" z1="-30" x2="-52" y2="52" z2="-30"/>
+        <line x1="-52" y1="52" z1="-30" x2="-52" y2="-52" z2="-30"/>
+        <line x1="-52" y1="-52" z1="30" x2="52" y2="-52" z2="30"/>
+        <line x1="52" y1="-52" z1="30" x2="52" y2="52" z2="30"/>
+        <line x1="52" y1="52" z1="30" x2="-52" y2="52" z2="30"/>
+        <line x1="-52" y1="52" z1="30" x2="-52" y2="-52" z2="30"/>
+        <line x1="-52" y1="-52" z1="-30" x2="-52" y2="-52" z2="30"/>
+        <line x1="52" y1="-52" z1="-30" x2="52" y2="-52" z2="30"/>
+        <line x1="52" y1="52" z1="-30" x2="52" y2="52" z2="30"/>
+        <line x1="-52" y1="52" z1="-30" x2="-52" y2="52" z2="30"/>
+      </g>
+      <circle cx="0" cy="0" r="6" cz="0" fill="#e53e3e"/>
+    </g>
+  </svg>`,
+    ),
+};
+
 export const WireframeBoxOrtho: Story = {
   name: "Wireframe box — line z1/z2, orthographic camera",
   render: () =>

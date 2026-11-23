@@ -16,7 +16,10 @@ import { renderSvg3d, resolveCamera } from "./lib/render.ts";
  * Supported (v1): line z1/z2, rect/circle/ellipse z & cz, polyline/polygon
  * zs, path3d (full grammar), text x/y/z lists, 3D transform functions,
  * <camera> (orthographic + perspective), <switch> with the urn:svg3d:1.0
- * extension. Not supported: image, use, SMIL animation (static snapshot).
+ * extension. SMIL animations pass through when child-targeted (transform and
+ * paint/opacity on groups & shapes survive the projection); geometry and
+ * camera attribute values are baked at projection time. Not supported:
+ * image, use, href-targeted animations.
  *
  * With the `controls` attribute, the viewer is focusable and the camera can
  * be driven from the keyboard:

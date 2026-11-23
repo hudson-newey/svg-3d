@@ -52,6 +52,22 @@ const PROJECTABLE = new Set([
   "a",
 ]);
 
+/**
+ * SMIL animation elements pass through to the projected output when they
+ * target their parent (no href): transform and paint/opacity animations
+ * are expressible in the projected space. Geometry/camera attribute
+ * animations are baked at projection time and cannot pass through.
+ */
+const ANIMATION_TAGS = new Set(["animate", "animateTransform", "set", "animateColor"]);
+
+function copySourceAnimations(el: Element, out: Element): void {
+  for (const child of elementChildren(el)) {
+    if (!ANIMATION_TAGS.has(child.tagName)) continue;
+    if (child.hasAttribute("href") || child.hasAttribute("xlink:href")) continue;
+    out.appendChild(document.importNode(child, true));
+  }
+}
+
 /** Attributes consumed by the projector; never copied to the output. */
 const GEOMETRY_ATTRS = new Set([
   "transform",
@@ -176,6 +192,7 @@ function renderNode(
         vbH,
         warn,
       );
+      copySourceAnimations(el, g);
       return;
     }
     case "switch": {
@@ -212,6 +229,7 @@ function renderNode(
       const path = document.createElementNS(SVG_NS, "path");
       path.setAttribute("d", projectGeometry(geom.subpaths, local, camera, basis, vbH));
       copyPaintAttrs(el, path);
+      copySourceAnimations(el, path);
       parentOut.appendChild(path);
       return;
     }
