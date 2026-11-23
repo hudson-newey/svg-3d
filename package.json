@@ -1,7 +1,6 @@
 {
-  "name": "svg-3d-viewer",
+  "name": "@hudson-newey/svg-3d-viewer",
   "version": "0.1.0",
-  "private": true,
   "description": "Reference viewer web component for the SVG 3D Level 1 draft specification",
   "files": [
     "dist"
@@ -22,6 +21,7 @@
     "build:storybook": "storybook build"
   },
   "dependencies": {
+    "@two-web/kit": "0.0.1-rc.6",
     "lit": "^3.3.3"
   },
   "devDependencies": {

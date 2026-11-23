@@ -1,6 +1,7 @@
 import { html, type TemplateResult } from "lit";
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import "../svg3d-viewer.ts";
+import { animate, animation, Timeline } from "@two-web/kit/animations";
 import {
   type Drawable,
   type Vec3,
@@ -1003,6 +1004,7 @@ export const NeonVectors3D: Story = {
     const togglePause = () => {
       if (state.phase === "playing") {
         state.phase = "paused";
+        if (timeline.isRunning) timeline.stop();
         unlockPointer();
         overlay.style.display = "flex";
         overlaySub.textContent = "Mission paused. Press P or click Resume to continue.";
@@ -1011,6 +1013,8 @@ export const NeonVectors3D: Story = {
         pauseBtn.textContent = "RESUME";
       } else if (state.phase === "paused") {
         state.phase = "playing";
+        last = performance.now(); // avoid a dt jump across the pause
+        if (!timeline.isRunning) timeline.start();
         overlay.style.display = "none";
         pauseBtn.textContent = "PAUSE";
         root.focus();
@@ -1112,6 +1116,15 @@ export const NeonVectors3D: Story = {
     let last = performance.now();
     let prevPhase: GamePhase = state.phase;
 
+    // Simulation/render loop driven by @two-web/kit/animations:
+    // - Timeline owns the loop lifecycle (started here, stopped while
+    //   paused, stopped permanently when the story unmounts).
+    // - The per-frame DOM writes are scheduled through animate() with
+    //   animation() identifiers, so the many 1ms Timeline ticks between
+    //   display frames coalesce into a single markup/HUD write per frame.
+    const renderId = animation("neon-vectors:render");
+    const hudId = animation("neon-vectors:hud");
+
     const updateHud = () => {
       scoreEl.textContent = String(Math.floor(state.score)).padStart(5, "0");
       bestEl.textContent = String(Math.floor(state.best)).padStart(5, "0");
@@ -1135,8 +1148,9 @@ export const NeonVectors3D: Story = {
       }
     };
 
-    const frame = (now: number) => {
+    const timeline = new Timeline(() => {
       if (!viewer.isConnected) {
+        if (timeline.isRunning) timeline.stop();
         window.removeEventListener("keydown", onKeyDown);
         window.removeEventListener("keyup", onKeyUp);
         window.removeEventListener("pointerup", onPointerUp);
@@ -1144,16 +1158,18 @@ export const NeonVectors3D: Story = {
         unlockPointer();
         return;
       }
+      const now = performance.now();
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (state.phase !== "paused") {
-        stepGame(state, dt, keys, pointerTarget, pointerDown, synth);
+      if (state.phase === "paused" || dt <= 0) return;
+      stepGame(state, dt, keys, pointerTarget, pointerDown, synth);
+      animate(() => {
         viewer.markup = buildGameSvg(state);
+      }, renderId);
+      animate(() => {
         updateHud();
-      }
-      requestAnimationFrame(frame);
-    };
-
-    requestAnimationFrame(frame);
+      }, hudId);
+    });
+    timeline.start();
   },
 };

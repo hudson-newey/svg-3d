@@ -1,3 +1,5 @@
 storeDir: .pnpm-store
 onlyBuiltDependencies:
   - esbuild
+minimumReleaseAgeExclude:
+  - "@two-web/kit@0.0.1-rc.6"
