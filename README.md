@@ -3,74 +3,55 @@
 ## Usage
 
 ```html
-<script
-  src="https://cdn.jsdelivr.net/npm/@hudson-newey/svg-3d-viewer"
-  type="module"
-></script>
+<script src="https://cdn.jsdelivr.net/npm/@hudson-newey/svg-3d-viewer" type="module"></script>
 
+<!-- The scene from the 3-camera--camera-reference story: a wireframe box on
+     a floor grid, with the perspective camera declared in <defs> and
+     selected via the camera="#orbit" attribute. -->
 <svg3d-viewer style="display:block;width:480px;height:360px">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
-    <!-- The whole cube rotates: SMIL animateTransform passes through the
-         projection and animates the mirrored output group. -->
-    <g>
-      <animateTransform
-        attributeName="transform"
-        type="rotate"
-        from="0"
-        to="360"
-        dur="14s"
-        repeatCount="indefinite"
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -90 180 180" camera="#orbit">
+    <defs>
+      <camera
+        id="orbit"
+        projection="perspective"
+        fov="55"
+        position="220 180 280"
+        target="50 50 50"
+        up="0 1 0"
+        near="1"
       />
-      <rect
-        x="-40"
-        y="-40"
-        width="80"
-        height="80"
-        z="-40"
-        fill="#3182ce"
-        fill-opacity="0.45"
-        stroke="#93c5fd"
-      >
-        <animate
-          attributeName="fill-opacity"
-          values="0.2;0.6;0.2"
-          dur="3s"
-          repeatCount="indefinite"
-        />
-      </rect>
-      <rect
-        x="-40"
-        y="-40"
-        width="80"
-        height="80"
-        z="40"
-        fill="#f6ad55"
-        fill-opacity="0.45"
-        stroke="#fbd38d"
-      >
-        <animate
-          attributeName="fill-opacity"
-          values="0.6;0.2;0.6"
-          dur="3s"
-          repeatCount="indefinite"
-        />
-      </rect>
-      <g stroke="#cbd5e1" stroke-width="1.2">
-        <line x1="-40" y1="-40" z1="-40" x2="40" y2="-40" z2="-40" />
-        <line x1="40" y1="-40" z1="-40" x2="40" y2="40" z2="-40" />
-        <line x1="40" y1="40" z1="-40" x2="-40" y2="40" z2="-40" />
-        <line x1="-40" y1="40" z1="-40" x2="-40" y2="-40" z2="-40" />
-        <line x1="-40" y1="-40" z1="40" x2="40" y2="-40" z2="40" />
-        <line x1="40" y1="-40" z1="40" x2="40" y2="40" z2="40" />
-        <line x1="40" y1="40" z1="40" x2="-40" y2="40" z2="40" />
-        <line x1="-40" y1="40" z1="40" x2="-40" y2="-40" z2="40" />
-        <line x1="-40" y1="-40" z1="-40" x2="-40" y2="-40" z2="40" />
-        <line x1="40" y1="-40" z1="-40" x2="40" y2="-40" z2="40" />
-        <line x1="40" y1="40" z1="-40" x2="40" y2="40" z2="40" />
-        <line x1="-40" y1="40" z1="-40" x2="-40" y2="40" z2="40" />
-      </g>
-      <circle cx="0" cy="0" r="5" cz="0" fill="#e53e3e" />
+    </defs>
+    <g stroke="#4a5568" stroke-width="1.5">
+      <line x1="0" y1="0" z1="0" x2="100" y2="0" z2="0" />
+      <line x1="0" y1="100" z1="0" x2="100" y2="100" z2="0" />
+      <line x1="0" y1="0" z1="100" x2="100" y2="0" z2="100" />
+      <line x1="0" y1="100" z1="100" x2="100" y2="100" z2="100" />
+      <line x1="0" y1="0" z1="0" x2="0" y2="100" z2="0" />
+      <line x1="100" y1="0" z1="0" x2="100" y2="100" z2="0" />
+      <line x1="0" y1="0" z1="100" x2="0" y2="100" z2="100" />
+      <line x1="100" y1="0" z1="100" x2="100" y2="100" z2="100" />
+      <line x1="0" y1="0" z1="0" x2="0" y2="0" z2="100" />
+      <line x1="100" y1="0" z1="0" x2="100" y2="0" z2="100" />
+      <line x1="0" y1="100" z1="0" x2="0" y2="100" z2="100" />
+      <line x1="100" y1="100" z1="0" x2="100" y2="100" z2="100" />
     </g>
+    <g stroke="#a0aec0" stroke-width="0.75">
+      <line x1="-50" y1="140" z1="-100" x2="-50" y2="140" z2="300" />
+      <line x1="-100" y1="140" z1="-50" x2="300" y2="140" z2="-50" />
+      <line x1="0" y1="140" z1="-100" x2="0" y2="140" z2="300" />
+      <line x1="-100" y1="140" z1="0" x2="300" y2="140" z2="0" />
+      <line x1="50" y1="140" z1="-100" x2="50" y2="140" z2="300" />
+      <line x1="-100" y1="140" z1="50" x2="300" y2="140" z2="50" />
+      <line x1="100" y1="140" z1="-100" x2="100" y2="140" z2="300" />
+      <line x1="-100" y1="140" z1="100" x2="300" y2="140" z2="100" />
+      <line x1="150" y1="140" z1="-100" x2="150" y2="140" z2="300" />
+      <line x1="-100" y1="140" z1="150" x2="300" y2="140" z2="150" />
+      <line x1="200" y1="140" z1="-100" x2="200" y2="140" z2="300" />
+      <line x1="-100" y1="140" z1="200" x2="300" y2="140" z2="200" />
+      <line x1="250" y1="140" z1="-100" x2="250" y2="140" z2="300" />
+      <line x1="-100" y1="140" z1="250" x2="300" y2="140" z2="250" />
+    </g>
+    <circle cx="50" cy="50" r="8" cz="50" fill="#e53e3e" />
   </svg>
 </svg3d-viewer>
 ```

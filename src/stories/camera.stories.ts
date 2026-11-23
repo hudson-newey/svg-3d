@@ -110,11 +110,9 @@ export const KeyboardControls: Story = {
   name: "Keyboard camera controls (click to focus, then use keys)",
   render: () =>
     html`<div>
-      <svg3d-viewer
-        controls
+      <svg3d-viewer controls style="width:520px;height:420px">
         ${unsafeHTML(controlsMarkup)}
-        style="width:520px;height:420px"
-      ></svg3d-viewer>
+      </svg3d-viewer>
       <p style="font:12px/1.5 sans-serif;max-width:520px;color:#64748b">
         Click the canvas (or Tab to it) so it has focus, then:
         <b>←/→</b> orbit around the target · <b>↑/↓</b> orbit elevation · <b>+/−</b> dolly in/out ·
