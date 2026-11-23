@@ -575,6 +575,7 @@ function stepGame(
   pointerTarget: { x: number; y: number } | null,
   firing: boolean,
   synth: RetroSynth,
+  joystick: { x: number; y: number } | null = null,
 ): void {
   s.time += dt;
   s.scrollZ += s.speed * dt;
@@ -616,6 +617,10 @@ function stepGame(
     const len = Math.hypot(ix, iy);
     s.shipVx += ((ix / len) * moveSpeed - s.shipVx) * Math.min(1, dt * 11);
     s.shipVy += ((iy / len) * moveSpeed - s.shipVy) * Math.min(1, dt * 11);
+  } else if (joystick && (joystick.x !== 0 || joystick.y !== 0)) {
+    // Analog on-screen joystick: stick deflection (0..1) scales ship speed.
+    s.shipVx += (joystick.x * moveSpeed - s.shipVx) * Math.min(1, dt * 11);
+    s.shipVy += (joystick.y * moveSpeed - s.shipVy) * Math.min(1, dt * 11);
   } else if (pointerTarget) {
     const dx = pointerTarget.x - s.shipX;
     const dy = pointerTarget.y - s.shipY;
@@ -812,6 +817,10 @@ export const NeonVectors3D: Story = {
       }
       .touch-only {
         display: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: none;
       }
       @media (pointer: coarse) {
         .touch-only {
@@ -887,10 +896,21 @@ export const NeonVectors3D: Story = {
         <button
           class="touch-only"
           data-action="fire"
-          style="position:absolute;right:16px;bottom:16px;width:88px;height:88px;border-radius:999px;border:2px solid #f43f5e;background:rgba(244,63,94,0.28);color:#fecdd3;font:800 15px/1 system-ui,sans-serif;letter-spacing:0.08em;align-items:center;justify-content:center;touch-action:none"
+          style="position:absolute;right:20px;bottom:20px;width:104px;height:104px;border-radius:999px;border:2px solid #f43f5e;background:rgba(244,63,94,0.28);color:#fecdd3;font:800 16px/1 system-ui,sans-serif;letter-spacing:0.08em;align-items:center;justify-content:center;padding:0"
         >
           FIRE
         </button>
+
+        <div
+          class="touch-only"
+          data-control="joystick"
+          style="position:absolute;left:20px;bottom:20px;width:128px;height:128px;border-radius:999px;border:2px solid rgba(56,189,248,0.55);background:rgba(56,189,248,0.14);align-items:center;justify-content:center"
+        >
+          <div
+            data-control="joystick-knob"
+            style="width:56px;height:56px;border-radius:999px;border:2px solid #38bdf8;background:rgba(56,189,248,0.4);box-shadow:0 0 14px rgba(56,189,248,0.5);pointer-events:none;will-change:transform"
+          ></div>
+        </div>
 
         <div data-overlay="panel" style=${overlayStyle}>
           <div
@@ -911,7 +931,8 @@ export const NeonVectors3D: Story = {
           <button data-action="start" style=${ctaBtn}>LAUNCH MISSION</button>
           <div style="font-size:11px;color:#94a3b8;margin-top:4px">
             <b>WASD / Arrows</b> or <b>Mouse</b> steer · <b>Space / Click</b> fire · <b>C</b> camera
-            · <b>P</b> pause · <b>F</b> fullscreen · <b>Touch: drag to steer, hold FIRE</b>
+            · <b>P</b> pause · <b>F</b> fullscreen ·
+            <b>Touch: left stick steers, right button fires</b>
           </div>
         </div>
       </div>
@@ -945,12 +966,18 @@ export const NeonVectors3D: Story = {
     const pauseBtn = root.querySelector<HTMLButtonElement>('[data-action="pause"]')!;
     const fsBtn = root.querySelector<HTMLButtonElement>('[data-action="fs"]')!;
     const fireBtn = root.querySelector<HTMLButtonElement>('[data-action="fire"]')!;
+    const joyEl = root.querySelector<HTMLElement>('[data-control="joystick"]')!;
+    const joyKnob = root.querySelector<HTMLElement>('[data-control="joystick-knob"]')!;
 
     const synth = new RetroSynth();
     let state = createInitialState();
     const keys = new Set<string>();
     let pointerTarget: { x: number; y: number } | null = null;
     let pointerDown = false;
+    // Touch controls track their own pointers so the joystick and fire button
+    // can be used simultaneously (multi-touch) without clobbering each other.
+    let fireHeld = false;
+    let joystick: { x: number; y: number } | null = null;
 
     // Pointer lock: on fine-pointer devices the cursor is captured while
     // playing; steering uses movementX/Y deltas. Touch devices keep drag
@@ -1064,6 +1091,7 @@ export const NeonVectors3D: Story = {
     window.addEventListener("keyup", onKeyUp);
 
     viewer.addEventListener("pointermove", (e: PointerEvent) => {
+      if (e.pointerType === "touch") return; // touch uses the on-screen controls
       if (state.phase !== "playing") return;
       if (locked) {
         if (lockedAim) {
@@ -1087,7 +1115,8 @@ export const NeonVectors3D: Story = {
       pointerTarget = null;
       pointerDown = false;
     });
-    viewer.addEventListener("pointerdown", () => {
+    viewer.addEventListener("pointerdown", (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
       if (state.phase !== "playing") return;
       pointerDown = true;
       lockPointer();
@@ -1095,20 +1124,73 @@ export const NeonVectors3D: Story = {
     viewer.addEventListener("contextmenu", (e) => e.preventDefault());
 
     // On-screen FIRE button (touch devices): hold to fire.
+    let firePointer: number | null = null;
     fireBtn.addEventListener("pointerdown", (e) => {
       e.preventDefault();
-      if (state.phase === "playing") pointerDown = true;
+      if (firePointer !== null) return;
+      firePointer = e.pointerId;
+      fireBtn.setPointerCapture?.(e.pointerId);
+      fireHeld = true;
+      fireBtn.style.background = "rgba(244,63,94,0.55)";
     });
-    fireBtn.addEventListener("pointerup", () => {
-      pointerDown = false;
+    const releaseFire = (e: PointerEvent) => {
+      if (e.pointerId !== firePointer) return;
+      firePointer = null;
+      fireHeld = false;
+      fireBtn.style.background = "rgba(244,63,94,0.28)";
+    };
+    fireBtn.addEventListener("pointerup", releaseFire);
+    fireBtn.addEventListener("pointercancel", releaseFire);
+    fireBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    // On-screen analog JOYSTICK (touch devices): drag the knob to steer.
+    const JOY_RADIUS = 48;
+    const JOY_DEADZONE = 0.12;
+    let joyPointer: number | null = null;
+    const updateJoystick = (e: PointerEvent) => {
+      const r = joyEl.getBoundingClientRect();
+      let dx = e.clientX - (r.left + r.width / 2);
+      let dy = e.clientY - (r.top + r.height / 2);
+      const len = Math.hypot(dx, dy);
+      if (len > JOY_RADIUS) {
+        dx = (dx / len) * JOY_RADIUS;
+        dy = (dy / len) * JOY_RADIUS;
+      }
+      joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+      const mag = Math.min(1, len / JOY_RADIUS);
+      if (mag < JOY_DEADZONE) {
+        joystick = null;
+      } else {
+        // Rescale so output ramps smoothly from 0 just outside the deadzone.
+        const scaled = (mag - JOY_DEADZONE) / (1 - JOY_DEADZONE);
+        joystick = {
+          x: (dx / JOY_RADIUS) * (scaled / mag),
+          y: (dy / JOY_RADIUS) * (scaled / mag),
+        };
+      }
+    };
+    const releaseJoystick = (e: PointerEvent) => {
+      if (e.pointerId !== joyPointer) return;
+      joyPointer = null;
+      joystick = null;
+      joyKnob.style.transform = "";
+    };
+    joyEl.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      if (joyPointer !== null) return;
+      joyPointer = e.pointerId;
+      joyEl.setPointerCapture?.(e.pointerId);
+      updateJoystick(e);
     });
-    fireBtn.addEventListener("pointercancel", () => {
-      pointerDown = false;
+    joyEl.addEventListener("pointermove", (e) => {
+      if (e.pointerId === joyPointer) updateJoystick(e);
     });
-    fireBtn.addEventListener("pointerleave", () => {
-      pointerDown = false;
-    });
-    const onPointerUp = () => {
+    joyEl.addEventListener("pointerup", releaseJoystick);
+    joyEl.addEventListener("pointercancel", releaseJoystick);
+    joyEl.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
       pointerDown = false;
     };
     window.addEventListener("pointerup", onPointerUp);
@@ -1162,7 +1244,7 @@ export const NeonVectors3D: Story = {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       if (state.phase === "paused" || dt <= 0) return;
-      stepGame(state, dt, keys, pointerTarget, pointerDown, synth);
+      stepGame(state, dt, keys, pointerTarget, pointerDown || fireHeld, synth, joystick);
       animate(() => {
         viewer.markup = buildGameSvg(state);
       }, renderId);
