@@ -35,6 +35,69 @@ unmodified SVG 2 renderer.
 </svg3d-viewer>
 ```
 
+### Use from a CDN (jsDelivr)
+
+The Vite build emits a self-contained ES module at `dist/svg-3d-viewer.js`
+(with `lit` kept external). The import map below points the two `lit`
+specifiers that the bundle imports at jsDelivr's ESM mirror, after which the
+component can be loaded straight from the CDN — here, a basic rotating box:
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "lit": "https://cdn.jsdelivr.net/npm/lit@3/+esm",
+      "lit/decorators.js": "https://cdn.jsdelivr.net/npm/lit@3/decorators.js/+esm"
+    }
+  }
+</script>
+<script type="module">
+  import "https://cdn.jsdelivr.net/npm/@hudson-newey/svg-3d-viewer@0.1.0/dist/svg-3d-viewer.js";
+
+  const viewer = document.getElementById("box");
+  const C = [-40, 40];
+  const corners = C.flatMap((x) => C.flatMap((y) => C.map((z) => [x, y, z])));
+  const edges = [
+    [0, 1], [2, 3], [4, 5], [6, 7], // z edges
+    [0, 2], [1, 3], [4, 6], [5, 7], // y edges
+    [0, 4], [1, 5], [2, 6], [3, 7], // x edges
+  ];
+
+  let angle = 0;
+  const frame = () => {
+    angle = (angle + 1.2) % 360;
+    const lines = edges
+      .map(([a, b]) => {
+        const A = corners[a], B = corners[b];
+        return `<line x1="${A[0]}" y1="${A[1]}" z1="${A[2]}" x2="${B[0]}" y2="${B[1]}" z2="${B[2]}"/>`;
+      })
+      .join("");
+    viewer.markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
+      <g transform="rotateX(${angle}) rotateY(${angle * 0.7})">
+        <rect x="-40" y="-40" width="80" height="80" z="-40" fill="#3182ce" fill-opacity="0.45" stroke="#93c5fd"/>
+        <rect x="-40" y="-40" width="80" height="80" z="40" fill="#f6ad55" fill-opacity="0.45" stroke="#fbd38d"/>
+        <g stroke="#cbd5e1" stroke-width="1.2">${lines}</g>
+      </g>
+    </svg>`;
+    requestAnimationFrame(frame);
+  };
+  frame();
+</script>
+
+<svg3d-viewer id="box" style="display:block;width:480px;height:360px"></svg3d-viewer>
+```
+
+Notes:
+
+- `@0.1.0` pins the version; use `@latest` (or a range) once the package is
+  published to npm — jsDelivr only serves published packages.
+- Alternatively, load
+  `https://cdn.jsdelivr.net/npm/@hudson-newey/svg-3d-viewer@0.1.0/dist/svg-3d-viewer.js/+esm`
+  with no import map at all: jsDelivr's `+esm` transform rewrites the `lit`
+  imports for you.
+- The rotation is driven by rewriting `markup` each frame; per spec §10 the
+  viewer itself renders static snapshots and animation is SMIL-only.
+
 Toolchain (Vite):
 
 - `pnpm dev` — Vite dev server with a demo page (`index.html`) showing the
