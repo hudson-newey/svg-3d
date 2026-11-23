@@ -89,7 +89,16 @@ interface LocalGeometry {
   subpaths: Subpath[];
 }
 
-export function renderSvg3d(root: SVGSVGElement, warn: WarnFn = () => {}): SVGSVGElement {
+export interface RenderOptions {
+  /** Override the document's resolved camera (used by interactive viewers). */
+  camera?: CameraDef;
+}
+
+export function renderSvg3d(
+  root: SVGSVGElement,
+  warn: WarnFn = () => {},
+  opts: RenderOptions = {},
+): SVGSVGElement {
   const out = document.createElementNS(SVG_NS, "svg");
   for (const attr of root.attributes) {
     if (GEOMETRY_ATTRS.has(attr.name)) continue;
@@ -97,7 +106,7 @@ export function renderSvg3d(root: SVGSVGElement, warn: WarnFn = () => {}): SVGSV
   }
   if (!out.hasAttribute("xmlns")) out.setAttribute("xmlns", SVG_NS);
 
-  const camera = resolveCamera(root);
+  const camera = opts.camera ?? resolveCamera(root);
   const basis = viewBasis(camera) ?? viewBasis(DEFAULT_CAMERA)!;
   const vbH = viewBoxHeight(root);
 
@@ -127,7 +136,7 @@ function viewBoxHeight(root: SVGSVGElement): number {
   return vb.length === 4 && vb.every((n) => !Number.isNaN(n)) && vb[3] !== 0 ? Math.abs(vb[3]!) : 1;
 }
 
-function resolveCamera(root: SVGSVGElement): CameraDef {
+export function resolveCamera(root: SVGSVGElement): CameraDef {
   const ref = root.getAttribute("camera");
   if (ref) {
     const id = ref.startsWith("#") ? ref.slice(1) : ref;

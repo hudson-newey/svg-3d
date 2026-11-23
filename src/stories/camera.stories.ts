@@ -93,6 +93,30 @@ export const NearFarClipping: Story = {
     ),
 };
 
+const controlsMarkup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -90 180 180">
+    <camera projection="perspective" fov="55" position="220 180 280" target="50 50 50" up="0 1 0" near="1"/>
+    ${SCENE}
+  </svg>`;
+
+export const KeyboardControls: Story = {
+  name: "Keyboard camera controls (click to focus, then use keys)",
+  render: () =>
+    html`<div>
+      <svg3d-viewer
+        controls
+        .markup=${controlsMarkup}
+        style="width:520px;height:420px"
+      ></svg3d-viewer>
+      <p style="font:12px/1.5 sans-serif;max-width:520px;color:#64748b">
+        Click the canvas (or Tab to it) so it has focus, then:
+        <b>←/→</b> orbit around the target · <b>↑/↓</b> orbit elevation · <b>+/−</b> dolly in/out ·
+        <b>Shift+arrows</b> pan the view plane · <b>R</b> reset. The orbit rotates the document's
+        own camera position around its target; zoom dollies along the view axis (visible under
+        perspective; orthographic projection ignores distance by spec §5.4).
+      </p>
+    </div>`,
+};
+
 const flythroughMarkup = (t: number): string => {
   const a = ((t * 0.35 * Math.PI) / 180) * 4; // slow orbit
   const r = 300;

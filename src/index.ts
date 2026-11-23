@@ -1,5 +1,10 @@
 export { Svg3dViewer } from "./svg3d-viewer.ts";
-export { renderSvg3d, SUPPORTED_EXTENSIONS } from "./lib/render.ts";
+export {
+  renderSvg3d,
+  resolveCamera,
+  SUPPORTED_EXTENSIONS,
+  type RenderOptions,
+} from "./lib/render.ts";
 export { flattenPath3d, type Subpath, type P3 } from "./lib/path3d.ts";
 export {
   DEFAULT_CAMERA,

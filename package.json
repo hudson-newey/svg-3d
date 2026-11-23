@@ -14,7 +14,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc",
-    "test": "node scripts/smoke.ts && node scripts/dom-smoke.ts",
+    "test": "node scripts/smoke.ts && node scripts/dom-smoke.ts && node scripts/controls-smoke.ts",
     "lint": "oxlint",
     "fmt": "oxfmt .",
     "fmt:check": "oxfmt --check .",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@storybook/web-components-vite": "^10.6.8",
+    "esbuild": "^0.28.2",
     "happy-dom": "^21.0.4",
     "oxfmt": "^0.79.0",
     "oxlint": "^1.94.0",

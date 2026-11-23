@@ -47,6 +47,10 @@ Toolchain (Vite):
   examples.
 - `pnpm test` — Node smoke tests of the projection and path grammars.
 
+Interactive controls: add the `controls` attribute to a viewer and it becomes
+focusable (click or Tab), with keyboard camera control — **←/→** orbit,
+**↑/↓** elevation, **+/−** dolly, **Shift+arrows** pan, **R** reset.
+
 ## Repository layout
 
 - `docs/plan.md` — the specification-writing plan (compatibility rules,

@@ -13,3 +13,6 @@ storybook-static/
 # Editors / OS
 .DS_Store
 *.swp
+
+# Test/build scratch
+.tmp/
