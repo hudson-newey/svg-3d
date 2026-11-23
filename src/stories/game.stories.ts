@@ -22,7 +22,7 @@ import {
 const meta = {
   title: "SVG3D/6 3D Game",
   component: "svg3d-viewer",
-  parameters: { docs: { autodocs: false } },
+  parameters: { layout: "fullscreen", docs: { autodocs: false } },
 } satisfies Meta;
 
 export default meta;
@@ -787,7 +787,7 @@ function stepGame(
 // ---------------------------------------------------------------------------
 
 const cabinetStyle =
-  "position:relative;display:flex;flex-direction:column;gap:10px;width:720px;max-width:100%;padding:14px;border-radius:14px;background:#070a14;color:#e2e8f0;font:13px/1.4 system-ui,-apple-system,sans-serif;border:1px solid rgba(56,189,248,0.28);box-shadow:0 18px 42px rgba(2,6,23,0.65);user-select:none";
+  "position:relative;display:flex;flex-direction:column;gap:10px;width:100%;height:100vh;box-sizing:border-box;overflow:hidden;padding:14px;border-radius:14px;background:#070a14;color:#e2e8f0;font:13px/1.4 system-ui,-apple-system,sans-serif;border:1px solid rgba(56,189,248,0.28);box-shadow:0 18px 42px rgba(2,6,23,0.65);user-select:none";
 const hudStyle =
   "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:8px;background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.2);font-family:ui-monospace,SFMono-Regular,monospace";
 const hudBtn =
@@ -800,7 +800,20 @@ const ctaBtn =
 export const NeonVectors3D: Story = {
   name: "Neon Vectors 3D (Space Trench Shooter)",
   render: (): TemplateResult => html`
-    <div style=${cabinetStyle} data-game="neon-vectors" tabindex="0">
+    <style>
+      .neon-cabinet {
+        width: 100%;
+        height: 100vh;
+      }
+      .neon-cabinet:fullscreen {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+      }
+    </style>
+    <div class="neon-cabinet" style=${cabinetStyle} data-game="neon-vectors" tabindex="0">
       <div style=${hudStyle}>
         <div style="display:flex;gap:16px;align-items:center">
           <div>
@@ -839,11 +852,12 @@ export const NeonVectors3D: Story = {
           <button data-action="cam" style=${hudBtn}>CAM: CHASE</button>
           <button data-action="sound" style=${hudBtn}>SFX: ON</button>
           <button data-action="pause" style=${hudBtn}>PAUSE</button>
+          <button data-action="fs" style=${hudBtn}>⛶ FULLSCREEN</button>
         </div>
       </div>
 
       <div
-        style="position:relative;width:100%;height:445px;border-radius:10px;overflow:hidden;border:1px solid rgba(56,189,248,0.22)"
+        style="position:relative;flex:1;min-height:0;width:100%;border-radius:10px;overflow:hidden;border:1px solid rgba(56,189,248,0.22)"
       >
         <svg3d-viewer
           .markup=${buildGameSvg(createInitialState())}
@@ -869,7 +883,7 @@ export const NeonVectors3D: Story = {
           <button data-action="start" style=${ctaBtn}>LAUNCH MISSION</button>
           <div style="font-size:11px;color:#94a3b8;margin-top:4px">
             <b>WASD / Arrows</b> or <b>Mouse</b> steer · <b>Space / Click</b> fire · <b>C</b> camera
-            · <b>P</b> pause
+            · <b>P</b> pause · <b>F</b> fullscreen
           </div>
         </div>
       </div>
@@ -901,6 +915,7 @@ export const NeonVectors3D: Story = {
     const camBtn = root.querySelector<HTMLButtonElement>('[data-action="cam"]')!;
     const soundBtn = root.querySelector<HTMLButtonElement>('[data-action="sound"]')!;
     const pauseBtn = root.querySelector<HTMLButtonElement>('[data-action="pause"]')!;
+    const fsBtn = root.querySelector<HTMLButtonElement>('[data-action="fs"]')!;
 
     const synth = new RetroSynth();
     let state = createInitialState();
@@ -953,6 +968,15 @@ export const NeonVectors3D: Story = {
     };
     pauseBtn.onclick = togglePause;
 
+    const toggleFullscreen = () => {
+      if (document.fullscreenElement) {
+        void document.exitFullscreen();
+      } else {
+        void root.requestFullscreen?.().catch(() => {});
+      }
+    };
+    fsBtn.onclick = toggleFullscreen;
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (!root.isConnected) return;
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
@@ -961,6 +985,7 @@ export const NeonVectors3D: Story = {
       keys.add(e.code);
       if (e.code === "KeyC") cycleCam();
       if (e.code === "KeyP") togglePause();
+      if (e.code === "KeyF") toggleFullscreen();
       if ((e.code === "Enter" || e.code === "KeyR") && state.phase !== "playing") {
         startGame();
       }
