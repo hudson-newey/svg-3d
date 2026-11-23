@@ -25,13 +25,11 @@ unmodified SVG 2 renderer.
 
 ```html
 <script type="module" src="./src/index.ts"></script>
-<svg3d-viewer
-  style="width: 480px; height: 360px"
-  .markup='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
-    <camera projection="perspective" fov="50" position="220 180 280" target="50 50 50"/>
-    <line x1="0" y1="0" z1="0" x2="100" y2="100" z2="100"/>
-  </svg>'
->
+<svg3d-viewer style="width: 480px; height: 360px">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
+    <camera projection="perspective" fov="50" position="220 180 280" target="50 50 50" />
+    <line x1="0" y1="0" z1="0" x2="100" y2="100" z2="100" />
+  </svg>
 </svg3d-viewer>
 ```
 

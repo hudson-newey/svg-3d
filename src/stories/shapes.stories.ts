@@ -12,8 +12,15 @@ const meta = {
 
 export default meta;
 
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+
+/**
+ * Static content is delivered through the default slot (declarative usage);
+ * unsafeHTML places the full <svg> document as a light-DOM child, which the
+ * viewer's hidden slot picks up and projects.
+ */
 const viewer = (markup: string, w = 420, h = 340): TemplateResult =>
-  html`<svg3d-viewer .markup=${markup} style="width:${w}px;height:${h}px"></svg3d-viewer>`;
+  html`<svg3d-viewer style="width:${w}px;height:${h}px">${unsafeHTML(markup)}</svg3d-viewer>`;
 
 /** Wireframe box edges, as `line` elements with z1/z2. */
 const boxEdges = (): string => {

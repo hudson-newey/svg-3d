@@ -29,6 +29,8 @@ await build({
   logLevel: "silent",
 });
 await import("../.tmp/component.mjs"); // registers <svg3d-viewer>
+const { html, render } = await import("lit");
+const { unsafeHTML } = await import("lit/directives/unsafe-html.js");
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = ""): void {
@@ -129,6 +131,26 @@ await new Promise((r) => setTimeout(r, 5)); // slotchange is async
 await slotted.updateComplete;
 const slotD = slotted.shadowRoot!.querySelector(".frame svg path")?.getAttribute("d");
 check("slot content projects", slotD === "M 10,20 L 30,40", slotD ?? "no path");
+
+// Slot content delivered through lit's unsafeHTML — the exact path the
+// static Storybook stories use.
+const unsafeHost = document.createElement("div");
+document.body.appendChild(unsafeHost);
+render(
+  html`<svg3d-viewer>
+    ${unsafeHTML(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><line x1="5" y1="5" z1="0" x2="25" y2="25" z2="0" stroke="red"/></svg>',
+    )}
+  </svg3d-viewer>`,
+  unsafeHost,
+);
+await new Promise((r) => setTimeout(r, 5));
+const litViewer = unsafeHost.querySelector("svg3d-viewer") as HTMLElement & {
+  updateComplete: Promise<boolean>;
+};
+await litViewer.updateComplete;
+const litD = litViewer.shadowRoot!.querySelector(".frame svg path")?.getAttribute("d");
+check("unsafeHTML slot content projects", litD === "M 5,5 L 25,25", litD ?? "no path");
 
 console.log(
   failures === 0

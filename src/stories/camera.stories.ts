@@ -1,4 +1,5 @@
 import { html, type TemplateResult } from "lit";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 
 type Story = StoryObj<typeof meta>;
@@ -12,8 +13,15 @@ const meta = {
 
 export default meta;
 
+/**
+ * Dynamic content (rewritten per frame in play functions) uses the markup
+ * property; static scenes use the default slot via viewerSlot().
+ */
 const viewer = (markup: string, w = 460, h = 380): TemplateResult =>
   html`<svg3d-viewer .markup=${markup} style="width:${w}px;height:${h}px"></svg3d-viewer>`;
+
+const viewerSlot = (markup: string, w = 460, h = 380): TemplateResult =>
+  html`<svg3d-viewer style="width:${w}px;height:${h}px">${unsafeHTML(markup)}</svg3d-viewer>`;
 
 const boxEdges = (): string => {
   const v = [
@@ -72,7 +80,7 @@ const SCENE = `
 export const CameraReference: Story = {
   name: "camera attribute url(#id) reuse (defs)",
   render: () =>
-    viewer(
+    viewerSlot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -90 180 180" camera="#orbit">
     <defs>
       <camera id="orbit" projection="perspective" fov="55" position="220 180 280" target="50 50 50" up="0 1 0" near="1"/>
@@ -85,7 +93,7 @@ export const CameraReference: Story = {
 export const NearFarClipping: Story = {
   name: "Depth clipping (near/far)",
   render: () =>
-    viewer(
+    viewerSlot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -90 180 180">
     <camera projection="perspective" fov="55" position="220 180 280" target="50 50 50" up="0 1 0" near="260" far="420"/>
     ${SCENE}
@@ -104,7 +112,7 @@ export const KeyboardControls: Story = {
     html`<div>
       <svg3d-viewer
         controls
-        .markup=${controlsMarkup}
+        ${unsafeHTML(controlsMarkup)}
         style="width:520px;height:420px"
       ></svg3d-viewer>
       <p style="font:12px/1.5 sans-serif;max-width:520px;color:#64748b">
